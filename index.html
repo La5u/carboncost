@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>carboncost.me</title>
+<meta name="description" content="Compare the carbon cost of everyday things: an AI prompt, a paper towel, a beef steak. Every number sourced.">
+<style>
+  * { box-sizing: border-box; }
+  body { font: 15px/1.4 system-ui, sans-serif; max-width: 760px; margin: 0 auto; padding: 0 1rem; color: #000; background: #fff; }
+  a { color: #000; }
+  svg { width: 1em; height: 1em; vertical-align: -.125em; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: .6rem 0; }
+  h1 { font-size: 1rem; margin: 0; }
+  select, input { font: inherit; color: #000; background: #fff; border: 1px solid #000; }
+  nav { display: flex; gap: 1rem; overflow-x: auto; white-space: nowrap; padding: .35rem 0; border-top: 1px solid #000; scrollbar-width: none; }
+  nav svg { margin-right: .3em; }
+  nav button, nav a { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; color: #000; text-decoration: none; }
+  nav .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+  #subs { font-size: .9rem; }
+  #head { border-top: 1px solid #000; padding: .8rem 0 1rem; }
+  #variants { border: 0; padding: 0 0 .3rem; font-size: .9rem; }
+  #variants:empty { display: none; }
+  #big { display: flex; align-items: center; gap: 1rem; margin: 0 0 .4rem; }
+  #big > svg { width: 4rem; height: 4rem; flex: none; stroke-width: 1.5; }
+  #what { display: block; font-size: 1.1rem; }
+  #total { display: block; font-size: 2.2rem; line-height: 1.15; }
+  #qty { font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px dotted #000;
+    padding: 0; text-align: center; outline: none; cursor: text; }
+  #qty:focus { border-bottom-style: solid; }
+  #detail details { margin: 0; font-size: .85rem; }
+  .rng { color: #666; font-size: .85em; }
+  #rows { list-style: none; padding: 0; margin: 0; }
+  #rows li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .3rem 0; border-top: 1px solid #ddd; }
+  #rows a { text-decoration: none; }
+  details { margin-left: auto; font-size: .8rem; color: #666; }
+  details[open] { flex-basis: 100%; margin-left: 1.5rem; }
+  summary { cursor: pointer; }
+  footer { font-size: .8rem; color: #666; margin: 1.5rem 0; border-top: 1px solid #000; }
+</style>
+</head>
+<body>
+<header>
+  <h1>carboncost.me <span class="rng">draft data</span></h1>
+  <select id="region" aria-label="Electricity grid"></select>
+</header>
+<nav id="cats"></nav>
+<nav id="subs"></nav>
+<section id="head">
+  <nav id="variants"></nav>
+  <div id="big"></div>
+  <div id="detail"></div>
+</section>
+<ul id="rows"></ul>
+<footer>
+  <p id="gridnote"></p>
+  <p>Draft: figures have not been checked against their sources yet. All figures are CO₂-equivalent.
+  Ranges run from best case to worst case.</p>
+</footer>
+<script src="icons.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
