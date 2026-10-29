@@ -42,14 +42,19 @@ function mass(g) {
   return sig(g) + ' g';
 }
 
+// "a – b", or '' when both ends format the same (only one sourced figure).
+const span = (a, b, fmt) => (fmt(a) === fmt(b) ? '' : `${fmt(a)} – ${fmt(b)}`);
+// No consensus between sources: show the range itself instead of a central value.
+const vague = (it) => it.conf === 'low';
+
 function source(it, summary) {
   const [lo, mid, hi] = grams(it);
-  const elec = it.kwh
-    ? ` = ${it.kwh[1]} kWh (${it.kwh[0]}–${it.kwh[2]}) × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid`
-    : '';
-  const refs = it.src.map(([t, url]) => (url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t))).join('; ');
-  return `<details><summary>${summary}</summary>${esc(it.name)}: ${mass(mid)} (${mass(lo)} – ${mass(hi)})
-    ${it.per === 'km' ? 'per km' : 'each'}${elec}. ${esc(it.note)} Source: ${refs}</details>`;
+  const rng = span(lo, hi, mass);
+  const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${it.kwh[0]}–${it.kwh[2]})` : '';
+  const elec = it.kwh ? ` = ${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
+  const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
+  return `<details><summary>${summary}</summary>${esc(it.name)}: ${mass(mid)}${rng ? ` (${rng})` : ''}
+    ${it.per === 'km' ? 'per km' : 'each'}${elec}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
 }
 
 function renderNav() {
@@ -84,15 +89,19 @@ function renderHead() {
 
 function renderRows() {
   const [lo, mid, hi] = grams(sel).map((g) => g * qty);
-  $('#total').textContent = mass(mid) + ' CO₂e';
-  $('#detail').innerHTML = source(sel, `range ${mass(lo)} – ${mass(hi)} · ${esc(sel.note)} · source`);
+  const rng = span(lo, hi, mass);
+  const fuzzy = vague(sel) && rng;
+  $('#total').textContent = (fuzzy ? rng : mass(mid)) + ' CO₂e';
+  $('#detail').innerHTML = source(sel, `${rng && !fuzzy ? `range ${rng} · ` : ''}${sel.conf} confidence · sources`);
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
   $('#rows').innerHTML = others.map((it) => {
     const [bLo, bMid, bHi] = grams(it);
     // Widest honest range: low of selected ÷ high of other, and vice versa.
-    return `<li><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${num(mid / bMid)} ${unit(it)}</b> ${esc(it.item)}${star(it)}</a>
-      <span class="rng">${num(lo / bHi)} – ${num(hi / bLo)}</span>${source(it, 'source')}</li>`;
+    const rng = span(lo / bHi, hi / bLo, num);
+    const fuzzy = (vague(sel) || vague(it)) && rng;
+    return `<li><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${fuzzy ? rng : num(mid / bMid)} ${unit(it)}</b> ${esc(it.item)}${star(it)}</a>
+      <span class="rng">${fuzzy ? '' : rng}</span>${source(it, 'source')}</li>`;
   }).join('');
 }
 
@@ -116,8 +125,8 @@ regionSel.onchange = () => {
   renderFoot();
 };
 function renderFoot() {
-  $('#gridnote').innerHTML = `* Electricity-based: calculated with the ${GRIDS[region][0]} grid average,
-    ${GRIDS[region][1]} g CO₂e/kWh (<a href="${GRID_SOURCE[1]}" rel="noopener">${GRID_SOURCE[0]}</a>).
+  $('#gridnote').innerHTML = `* Electricity-based: calculated with the ${GRIDS[region][0]} grid average in 2025,
+    ${GRIDS[region][1]} g CO₂e/kWh including building and fuelling power plants (<a href="${GRID_SOURCE[1]}" rel="noopener">${GRID_SOURCE[0]}</a>).
     Region guessed from your timezone; change it at the top.`;
 }
 

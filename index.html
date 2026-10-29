@@ -36,12 +36,13 @@
   details { margin-left: auto; font-size: .8rem; color: #666; }
   details[open] { flex-basis: 100%; margin-left: 1.5rem; }
   summary { cursor: pointer; }
+  details ul { margin: .2rem 0 .4rem; padding-left: 1.2rem; }
   footer { font-size: .8rem; color: #666; margin: 1.5rem 0; border-top: 1px solid #000; }
 </style>
 </head>
 <body>
 <header>
-  <h1>carboncost.me <span class="rng">draft data</span></h1>
+  <h1>carboncost.me</h1>
   <select id="region" aria-label="Electricity grid"></select>
 </header>
 <nav id="cats"></nav>
@@ -54,8 +55,8 @@
 <ul id="rows"></ul>
 <footer>
   <p id="gridnote"></p>
-  <p>Draft: figures have not been checked against their sources yet. All figures are CO₂-equivalent.
-  Ranges run from best case to worst case.</p>
+  <p>All figures are CO₂-equivalent. Each one links to at least one published source, with the figure it gives;
+  “confidence” says how well the sources agree. Where they don’t agree, we show the range instead of a single number. Ranges run from best case to worst case.</p>
 </footer>
 <script src="icons.js"></script>
 <script src="data.js"></script>
