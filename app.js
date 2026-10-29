@@ -30,7 +30,7 @@ let sel, cat, qty;
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 // As given: per unit, per km for trips, or per amt of unit.
-const perUnit = (it) => (it.kwh ? it.kwh.map((k) => k * GRIDS[region][1]) : it.g);
+const perUnit = (it) => [0, 1, 2].map((i) => (it.g ? it.g[i] : 0) + (it.kwh ? it.kwh[i] * GRIDS[region][1] : 0));
 // For the default amount: one unit, an average trip, or amt of unit.
 const grams = (it) => perUnit(it).map((g) => g * (it.km || 1));
 const deflt = (it) => it.km || it.amt || 1;
@@ -75,7 +75,8 @@ function source(it, summary) {
   const tRng = span(tLo, tHi, mass);
   const perTrip = it.km ? `; average trip ${it.km.toLocaleString('en')} km = ${mass(tMid)}${tRng ? ` (${tRng})` : ''}` : '';
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${it.kwh[0]}–${it.kwh[2]})` : '';
-  const elec = it.kwh ? ` = ${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
+  const fuel = it.g && it.kwh ? `${it.g[1]} g from fuel + ` : '';
+  const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
   const per = it.km ? ' per km' : it.amt ? '' : ' each';
   return `<details><summary>${summary}</summary>${esc(it.name)}${it.amt ? size(it) : ''}: ${mass(mid)}${rng ? ` (${rng})` : ''}${per}${elec}${perTrip}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
