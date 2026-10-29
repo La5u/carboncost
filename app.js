@@ -25,17 +25,24 @@ function guessRegion() {
 
 let region = localStorage.getItem('region');
 if (!GRIDS[region]) region = guessRegion();
-// qty counts units, or km for trips (starting at the average trip).
+// Amount of the selected item: units, km for trips, or its own unit (g, ml, min…). Starts at the default amount.
 let sel, cat, qty;
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-// Per unit, or per km for trips; the selected item is counted with this.
+// As given: per unit, per km for trips, or per amt of unit.
 const perUnit = (it) => (it.kwh ? it.kwh.map((k) => k * GRIDS[region][1]) : it.g);
-// Per unit, or per average trip.
+// For the default amount: one unit, an average trip, or amt of unit.
 const grams = (it) => perUnit(it).map((g) => g * (it.km || 1));
+const deflt = (it) => it.km || it.amt || 1;
+// Per one of whatever qty counts.
+const perOne = (it) => grams(it).map((g) => g / deflt(it));
+// What the default amount is, e.g. 'average'.
+const avg = (it) => (it.km ? 'average trip' : it.avg);
 const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 const star = (it) => (it.kwh ? '*' : '');
-const trip = (it) => (it.km ? ` (${it.km.toLocaleString('en')} km trip)` : '');
+const size = (it) => (it.km ? ` (${it.km.toLocaleString('en')} km trip)` : it.amt ? ` (${it.amt.toLocaleString('en')} ${it.unit})` : '');
+// Lower-case the first letter of a name inside a sentence, but not of an abbreviation like 'LED'.
+const lc = (s) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
 
 // 2 significant figures; values below 0.1 are shown as fractions, e.g. 1/300.
 const sig = (x) => (+x.toPrecision(2)).toLocaleString('en', { maximumFractionDigits: 3 });
@@ -70,8 +77,8 @@ function source(it, summary) {
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${it.kwh[0]}–${it.kwh[2]})` : '';
   const elec = it.kwh ? ` = ${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
-  return `<details><summary>${summary}</summary>${esc(it.name)}: ${mass(mid)}${rng ? ` (${rng})` : ''}
-    ${it.km ? 'per km' : 'each'}${elec}${perTrip}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
+  const per = it.km ? ' per km' : it.amt ? '' : ' each';
+  return `<details><summary>${summary}</summary>${esc(it.name)}${it.amt ? size(it) : ''}: ${mass(mid)}${rng ? ` (${rng})` : ''}${per}${elec}${perTrip}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
 }
 
 function renderNav() {
@@ -91,12 +98,12 @@ function renderHead() {
   $('#variants').innerHTML = vs.length > 1
     ? vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}">${esc(v.name)}</a>`).join('')
     : '';
-  const what = sel.km ? 'km by ' + sel.name[0].toLowerCase() + sel.name.slice(1) : '× ' + sel.name;
+  const what = sel.km ? 'km by ' + lc(sel.name) : sel.amt ? `${sel.unit} ${lc(sel.name)}` : '× ' + sel.name;
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
     value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span></span><b id="total"></b>
     <span id="person"></span></div>`;
   const input = $('#qty');
-  const fit = () => { input.style.width = Math.max(1, input.value.length) + 0.5 + 'ch'; };
+  const fit = () => { input.style.width = Math.max(1, input.value.length) + 1 + 'ch'; };
   fit();
   input.oninput = () => {
     fit();
@@ -106,10 +113,10 @@ function renderHead() {
 }
 
 function renderRows() {
-  const [lo, mid, hi] = perUnit(sel).map((g) => g * qty);
+  const [lo, mid, hi] = perOne(sel).map((g) => g * qty);
   const rng = span(lo, hi, mass);
   const fuzzy = vague(sel) && rng;
-  $('#avg').textContent = sel.km && qty === sel.km ? ' (average trip)' : '';
+  $('#avg').textContent = avg(sel) && qty === deflt(sel) ? ` (${avg(sel)})` : '';
   $('#total').textContent = (fuzzy ? rng : mass(mid)) + ' CO₂e';
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `About what the average person on Earth emits in ${time(mid)}.`;
@@ -121,14 +128,14 @@ function renderRows() {
     // Widest honest range: low of selected ÷ high of other, and vice versa.
     const rng = span(lo / bHi, hi / bLo, num);
     const fuzzy = (vague(sel) || vague(it)) && rng;
-    return `<li><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${fuzzy ? rng : num(mid / bMid)} ×</b> ${esc(it.name)}${trip(it)}${star(it)}</a>
+    return `<li><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${fuzzy ? rng : num(mid / bMid)} ×</b> ${esc(it.name)}${size(it)}${star(it)}</a>
       <span class="rng">${fuzzy ? '' : rng}</span>${source(it, 'source')}</li>`;
   }).join('');
 }
 
 function render() {
   sel = byId[location.hash.slice(1)] || ITEMS[0];
-  qty = sel.km || 1;
+  qty = deflt(sel);
   cat = sel.cat;
   renderNav();
   renderHead();
