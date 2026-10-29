@@ -25,9 +25,11 @@
   #big > svg { width: 4rem; height: 4rem; flex: none; stroke-width: 1.5; }
   #what { display: block; font-size: 1.1rem; }
   #total { display: block; font-size: 2.2rem; line-height: 1.15; }
-  #qty { font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px dotted #000;
-    padding: 0; text-align: center; outline: none; cursor: text; }
-  #qty:focus { border-bottom-style: solid; }
+  #qty { font: inherit; color: inherit; background: none; border: 1px solid #000; border-radius: 3px;
+    padding: 0 .15em; text-align: center; outline: none; cursor: text; }
+  #qty:focus { outline: 2px solid #000; }
+  #person { display: block; font-size: .9rem; color: #444; margin-top: .2rem; }
+  h2 { font-size: .9rem; font-weight: 400; color: #444; margin: .2rem 0 .3rem; }
   #detail details { margin: 0; font-size: .85rem; }
   .rng { color: #666; font-size: .85em; }
   #rows { list-style: none; padding: 0; margin: 0; }
@@ -52,11 +54,13 @@
   <div id="big"></div>
   <div id="detail"></div>
 </section>
+<h2>Same carbon footprint as:</h2>
 <ul id="rows"></ul>
 <footer>
   <p id="gridnote"></p>
-  <p>All figures are CO₂-equivalent. Each one links to at least one published source, with the figure it gives;
-  “confidence” says how well the sources agree. Where they don’t agree, we show the range instead of a single number. Ranges run from best case to worst case.</p>
+  <p>CO₂e (CO₂-equivalent) counts all greenhouse gases, not just CO₂, as the amount of CO₂ that would warm the planet as much.
+  Every figure links to at least one published source. Grey numbers are the range from best case to worst case;
+  where sources disagree a lot, we show only the range. “Confidence” says how well the sources agree.</p>
 </footer>
 <script src="icons.js"></script>
 <script src="data.js"></script>

@@ -28,14 +28,27 @@ if (!GRIDS[region]) region = guessRegion();
 let sel, cat, qty = 1;
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-const grams = (it) => (it.kwh ? it.kwh.map((k) => k * GRIDS[region][1]) : it.g);
+// Per unit, or per km for trips.
+const perUnit = (it) => (it.kwh ? it.kwh.map((k) => k * GRIDS[region][1]) : it.g);
+// Per unit, or per average trip.
+const grams = (it) => perUnit(it).map((g) => g * (it.km || 1));
 const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 const star = (it) => (it.kwh ? '*' : '');
-const unit = (it) => (it.per === 'km' ? 'km' : '×');
+const trip = (it) => (it.km ? ` (${it.km.toLocaleString('en')} km trip)` : '');
 
 // 2 significant figures; values below 0.1 are shown as fractions, e.g. 1/300.
 const sig = (x) => (+x.toPrecision(2)).toLocaleString('en', { maximumFractionDigits: 3 });
 const num = (n) => (n >= 0.1 ? sig(n) : '1/' + sig(Math.round(1 / n)));
+// World emissions per person per year, to turn a mass into time: "the average person emits this in 3 hours".
+const PERSON_YEAR = byId['person-year'].g[1];
+function time(g) {
+  const s = (g / PERSON_YEAR) * 365.25 * 86400;
+  if (s < 1) return 'less than a second';
+  const [n, u] = [[31557600, 'year'], [86400, 'day'], [3600, 'hour'], [60, 'minute'], [1, 'second']]
+    .map(([sec, u]) => [s / sec, u]).find(([n]) => n >= 1);
+  const r = sig(n);
+  return `${r} ${u}${r === '1' ? '' : 's'}`;
+}
 function mass(g) {
   if (g >= 1e6) return sig(g / 1e6) + ' t';
   if (g >= 1e3) return sig(g / 1e3) + ' kg';
@@ -48,13 +61,16 @@ const span = (a, b, fmt) => (fmt(a) === fmt(b) ? '' : `${fmt(a)} – ${fmt(b)}`)
 const vague = (it) => it.conf === 'low';
 
 function source(it, summary) {
-  const [lo, mid, hi] = grams(it);
+  const [lo, mid, hi] = perUnit(it);
   const rng = span(lo, hi, mass);
+  const [tLo, tMid, tHi] = grams(it);
+  const tRng = span(tLo, tHi, mass);
+  const perTrip = it.km ? `; average trip ${it.km.toLocaleString('en')} km = ${mass(tMid)}${tRng ? ` (${tRng})` : ''}` : '';
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${it.kwh[0]}–${it.kwh[2]})` : '';
   const elec = it.kwh ? ` = ${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
   return `<details><summary>${summary}</summary>${esc(it.name)}: ${mass(mid)}${rng ? ` (${rng})` : ''}
-    ${it.per === 'km' ? 'per km' : 'each'}${elec}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
+    ${it.km ? 'per km' : 'each'}${elec}${perTrip}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
 }
 
 function renderNav() {
@@ -74,9 +90,10 @@ function renderHead() {
   $('#variants').innerHTML = vs.length > 1
     ? vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}">${esc(v.name)}</a>`).join('')
     : '';
-  const what = sel.per === 'km' ? 'km by ' + sel.name[0].toLowerCase() + sel.name.slice(1) : '× ' + sel.name;
+  const what = '× ' + sel.name + trip(sel);
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
-    value="${qty}" aria-label="Amount"> ${esc(what)}${star(sel)}</span><b id="total"></b></div>`;
+    value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}</span><b id="total"></b>
+    <span id="person"></span></div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 0.5 + 'ch'; };
   fit();
@@ -92,6 +109,8 @@ function renderRows() {
   const rng = span(lo, hi, mass);
   const fuzzy = vague(sel) && rng;
   $('#total').textContent = (fuzzy ? rng : mass(mid)) + ' CO₂e';
+  $('#person').textContent = sel.id === 'person-year' ? ''
+    : `About what the average person on Earth emits in ${time(mid)}.`;
   $('#detail').innerHTML = source(sel, `${rng && !fuzzy ? `range ${rng} · ` : ''}${sel.conf} confidence · sources`);
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
@@ -100,7 +119,7 @@ function renderRows() {
     // Widest honest range: low of selected ÷ high of other, and vice versa.
     const rng = span(lo / bHi, hi / bLo, num);
     const fuzzy = (vague(sel) || vague(it)) && rng;
-    return `<li><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${fuzzy ? rng : num(mid / bMid)} ${unit(it)}</b> ${esc(it.item)}${star(it)}</a>
+    return `<li><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${fuzzy ? rng : num(mid / bMid)} ×</b> ${esc(it.name)}${trip(it)}${star(it)}</a>
       <span class="rng">${fuzzy ? '' : rng}</span>${source(it, 'source')}</li>`;
   }).join('');
 }
@@ -115,7 +134,7 @@ function render() {
 
 const regionSel = $('#region');
 regionSel.innerHTML = Object.entries(GRIDS)
-  .map(([k, [n, g]]) => `<option value="${k}">${n} grid (${g} g/kWh)</option>`).join('');
+  .map(([k, [n]]) => `<option value="${k}">Electricity: ${n}</option>`).join('');
 regionSel.value = region;
 regionSel.onchange = () => {
   region = regionSel.value;
@@ -125,9 +144,9 @@ regionSel.onchange = () => {
   renderFoot();
 };
 function renderFoot() {
-  $('#gridnote').innerHTML = `* Electricity-based: calculated with the ${GRIDS[region][0]} grid average in 2025,
-    ${GRIDS[region][1]} g CO₂e/kWh including building and fuelling power plants (<a href="${GRID_SOURCE[1]}" rel="noopener">${GRID_SOURCE[0]}</a>).
-    Region guessed from your timezone; change it at the top.`;
+  $('#gridnote').innerHTML = `* Runs on electricity, so it depends on how your electricity is made. We use the
+    ${GRIDS[region][0]} average for 2025: ${GRIDS[region][1]} g CO₂e per kWh, including building and fuelling power plants
+    (<a href="${GRID_SOURCE[1]}" rel="noopener">${GRID_SOURCE[0]}</a>). We guessed your region from your timezone; change it at the top.`;
 }
 
 addEventListener('hashchange', () => { qty = 1; render(); scrollTo(0, 0); });
