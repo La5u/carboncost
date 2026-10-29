@@ -39,7 +39,8 @@ const perOne = (it) => grams(it).map((g) => g / deflt(it));
 // What the default amount is, e.g. 'average'.
 const avg = (it) => (it.km ? 'average trip' : it.avg);
 const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-const star = (it) => (it.kwh ? '*' : '');
+// Footnote marks: * runs on electricity, † food (counted as bought).
+const star = (it) => (it.kwh ? '*' : '') + (it.cat === 'Food & drink' ? '†' : '');
 const size = (it) => (it.km ? ` (${it.km.toLocaleString('en')} km trip)` : it.amt ? ` (${it.amt.toLocaleString('en')} ${it.unit})` : '');
 // Lower-case the first letter of a name inside a sentence, but not of an abbreviation like 'LED'.
 const lc = (s) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
@@ -102,7 +103,7 @@ function renderHead() {
   const what = sel.km ? 'km by ' + lc(sel.name) : sel.amt ? `${sel.unit} ${lc(sel.name)}` : '× ' + sel.name;
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
     value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span></span><b id="total"></b>
-    <span id="person"></span></div>`;
+    <span id="person"></span>${sel.model ? `<span id="model">Based on one model: ${esc(sel.model)}</span>` : ''}</div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 1 + 'ch'; };
   fit();
