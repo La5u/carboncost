@@ -25,10 +25,11 @@ function guessRegion() {
 
 let region = localStorage.getItem('region');
 if (!GRIDS[region]) region = guessRegion();
-let sel, cat, qty = 1;
+// qty counts units, or km for trips (starting at the average trip).
+let sel, cat, qty;
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-// Per unit, or per km for trips.
+// Per unit, or per km for trips; the selected item is counted with this.
 const perUnit = (it) => (it.kwh ? it.kwh.map((k) => k * GRIDS[region][1]) : it.g);
 // Per unit, or per average trip.
 const grams = (it) => perUnit(it).map((g) => g * (it.km || 1));
@@ -90,9 +91,9 @@ function renderHead() {
   $('#variants').innerHTML = vs.length > 1
     ? vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}">${esc(v.name)}</a>`).join('')
     : '';
-  const what = '× ' + sel.name + trip(sel);
+  const what = sel.km ? 'km by ' + sel.name[0].toLowerCase() + sel.name.slice(1) : '× ' + sel.name;
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
-    value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}</span><b id="total"></b>
+    value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span></span><b id="total"></b>
     <span id="person"></span></div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 0.5 + 'ch'; };
@@ -105,9 +106,10 @@ function renderHead() {
 }
 
 function renderRows() {
-  const [lo, mid, hi] = grams(sel).map((g) => g * qty);
+  const [lo, mid, hi] = perUnit(sel).map((g) => g * qty);
   const rng = span(lo, hi, mass);
   const fuzzy = vague(sel) && rng;
+  $('#avg').textContent = sel.km && qty === sel.km ? ' (average trip)' : '';
   $('#total').textContent = (fuzzy ? rng : mass(mid)) + ' CO₂e';
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `About what the average person on Earth emits in ${time(mid)}.`;
@@ -126,6 +128,7 @@ function renderRows() {
 
 function render() {
   sel = byId[location.hash.slice(1)] || ITEMS[0];
+  qty = sel.km || 1;
   cat = sel.cat;
   renderNav();
   renderHead();
@@ -149,6 +152,6 @@ function renderFoot() {
     (<a href="${GRID_SOURCE[1]}" rel="noopener">${GRID_SOURCE[0]}</a>). We guessed your region from your timezone; change it at the top.`;
 }
 
-addEventListener('hashchange', () => { qty = 1; render(); scrollTo(0, 0); });
+addEventListener('hashchange', () => { render(); scrollTo(0, 0); });
 render();
 renderFoot();
