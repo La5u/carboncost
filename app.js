@@ -150,18 +150,30 @@ function renderRows() {
   // The scale starts a little below the smallest item, so even that one gets a visible bar.
   const [lMin, lMax] = [Math.min(...logs) - 1, Math.max(...logs)];
   const pct = (g) => (((Math.log(g) - lMin) / (lMax - lMin)) * 100).toFixed(1) + '%';
-  $('#rows').style.setProperty('--sel', pct(mid));
-  const rows = others.map((it) => {
-    const [bLo, bMid, bHi] = grams(it);
-    // Widest honest range: low of selected ÷ high of other, and vice versa.
-    // A low end at or below zero (e.g. chocolate from farms that store carbon) leaves no upper limit.
-    const [a, b] = [Math.max(lo / bHi, 0), bLo > 0 ? hi / bLo : Infinity];
-    return [isFinite(b) ? numSpan(a, b) || num(mid / bMid) : `${num(a)} or more`, it, bMid];
-  });
-  // Multipliers sit in one right-aligned column, as wide as the longest.
-  $('#rows').style.setProperty('--w', Math.max(...rows.map(([m]) => m.length)) + 2 + 'ch');
-  $('#rows').innerHTML = rows.map(([m, it, bMid]) => `<li style="--bar:${pct(bMid)}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${esc(it.name)}${size(it)}${star(it)}</a>
+  // Widest honest range of x / y: low ÷ high and high ÷ low. A low end at or below zero
+  // (e.g. chocolate from farms that store carbon) leaves no upper limit.
+  const ratio = ([xLo, xMid, xHi], [yLo, yMid, yHi]) => {
+    const [a, b] = [Math.max(xLo / yHi, 0), yLo > 0 ? xHi / yLo : Infinity];
+    return isFinite(b) ? numSpan(a, b) || num(xMid / yMid) : `${num(a)} or more`;
+  };
+  const mine = [lo, mid, hi];
+  // Smaller items: how many of them match yours. Bigger ones: how many of yours match one of them.
+  const smaller = others.filter((it) => grams(it)[1] <= mid), bigger = others.filter((it) => grams(it)[1] > mid);
+  // Your item as named in the bigger rows; the amount only when you changed it, to keep rows short.
+  const yours = qty === deflt(sel) ? lc(sel.name) : sel.km ? `${fmt(qty)} km ${lc(sel.name)}`
+    : sel.amt ? `${fmt(qty)} ${sel.unit} ${lc(sel.name)}` : `${fmt(qty)} × ${lc(sel.name)}`;
+  const list = (el, items, row) => {
+    const rows = items.map((it) => [row(it), it]);
+    el.style.setProperty('--sel', pct(mid));
+    // Multipliers sit in one right-aligned column, as wide as the longest.
+    el.style.setProperty('--w', Math.max(0, ...rows.map(([[m]]) => m.length)) + 2 + 'ch');
+    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${text}</a>
       ${source(it, 'source')}</li>`).join('');
+    el.previousElementSibling.hidden = !items.length;
+  };
+  const name = (it) => `${esc(it.name)}${size(it)}${star(it)}`;
+  list($('#rows'), smaller, (it) => [ratio(mine, grams(it)), name(it)]);
+  list($('#rows2'), bigger, (it) => [ratio(grams(it), mine), `${esc(yours)} = ${name(it)}`]);
 }
 
 function render() {
