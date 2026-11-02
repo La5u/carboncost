@@ -97,9 +97,8 @@ $('#cats').onclick = (e) => {
 
 function renderHead() {
   const vs = groups[sel.item];
-  $('#variants').innerHTML = vs.length > 1
-    ? vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}">${esc(v.name)}</a>`).join('')
-    : '';
+  // Shown even for a single variant, so it is clear which exact item the figure is for.
+  $('#variants').innerHTML = vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}">${esc(v.name)}</a>`).join('');
   const what = sel.km ? 'km by ' + lc(sel.name) : sel.amt ? `${sel.unit} ${lc(sel.name)}` : '× ' + sel.name;
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
     value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span></span><b id="total"></b>
