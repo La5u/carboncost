@@ -44,7 +44,6 @@ const CONCITO = 'https://concito.dk/files/media/document/Version%201.2_DK_rev_18
 const OWID_MILKS = 'https://ourworldindata.org/grapher/environmental-footprint-milks';
 const FRONTIERS = 'https://www.frontiersin.org/journals/sustainable-food-systems/articles/10.3389/fsufs.2026.1717648/full';
 const DOE_BULBS = 'https://www.energy.gov/cmei/femp/purchasing-energy-efficient-light-bulbs';
-const OWID_TRAVEL = 'https://ourworldindata.org/travel-carbon-footprint';
 const SOHN = 'https://backend.orbit.dtu.dk/ws/files/295792689/Sohn_2022_The_environmental_impacts_of_clothing_post_print.pdf';
 const ESSITY = 'https://tork-images.essity.com/images-c5/516/458516/original/essity-epd-paper-towels-june23.pdf';
 const UBA_PAPER = 'https://www.umweltbundesamt.de/system/files/medien/479/publikationen/texte_123-2022_updated_life-cycle_assessment_of_graphic_and_tissue_paper_-_spotlight_report.pdf';
@@ -240,7 +239,6 @@ window.ITEMS = [
   { id: 'car', cat: 'Transport', item: 'Car', icon: 'car', name: 'Petrol car, driver alone', km: 13, g: [143, 163, 268], conf: 'medium',
     note: 'Average UK petrol car; small to large cars make the range. Sharing the car divides this between passengers. Excludes making the car.',
     src: [['UK DESNZ (2025) conversion factors: average petrol car 163 g CO2e/km; small 143, large 268', DESNZ_FACTORS],
-          ['Our World in Data (2023), from UK government factors: average petrol car 170 g/km', OWID_TRAVEL],
           ['US EPA: typical passenger vehicle 400 g CO2 per mile → 250 g/km', 'https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle'],
           ['German Environment Agency (2025): petrol car 165 g/pkm at 1.4 people → 230 g with the driver alone', UBA_TRANSPORT],
           ['UK National Travel Survey via Defra (2025), table C-1: average car driver trip in England 8.2 miles (2024) → 13 km', NTS]] },
@@ -273,7 +271,7 @@ window.ITEMS = [
   { id: 'e-scooter', cat: 'Transport', item: 'E-scooter', icon: 'scooter', name: 'Shared e-scooter', km: 2, g: [45, 100, 130], conf: 'medium',
     note: 'Includes making, charging and servicing the scooters. Newer, longer-lasting fleets are at the low end.',
     src: [['Bochum University of Applied Sciences (2021): 46 g CO2e/pkm', 'https://www.hochschule-bochum.de/en/sustainable-technologies-lab/reference-projects/screening-lca-e-scooter-sharing/'],
-          ['UK House of Commons Transport Committee (2020), citing Arcadis in Paris: about 105 g CO2e/km', 'https://publications.parliament.uk/pa/cm5801/cmselect/cmtrans/255/25509.htm'],
+          ['Arcadis (2019), shared e-scooters in Paris: over 105 g CO2e per passenger-km', 'https://www.arcadis.com/fr/france/news/communiques-de-presse/2019/arcadis-publie-une-etude-sur-l-impact-environnemental-des-trottinettes-electriques-en-free-floating-a-paris/'],
           ['Hollingsworth et al. (2019): 202 g CO2e per passenger-mile → 126 g/km', 'https://www.uv.es/ceconomiacol/Hollingsworth_2019_Environ._Res._Lett._14_084031.pdf'],
           ['NACTO (2020): typical shared scooter trip 1–1.5 miles → 2 km', 'https://nacto.org/wp-content/uploads/2020bikesharesnapshot.pdf']] },
   { id: 'train', cat: 'Transport', item: 'Train', icon: 'train-front', name: 'Train', km: 54, g: [25, 31, 45], conf: 'medium',
@@ -314,12 +312,11 @@ window.ITEMS = [
           ['University of Malaya (2026 preprint), p. 6: Fooocus 4.2–4.9 Wh per image measured', 'https://assets-eu.researchsquare.com/files/rs-9059211/v1/86029fe1-22f2-4393-92c9-4c9afcdbdd47.pdf?c=1779969068']] },
   { id: 'bitcoin', cat: 'Tech', item: 'Bitcoin', icon: 'bitcoin', name: 'Bitcoin transaction', g: [425000, 486000, 486000], conf: 'medium',
     note: 'All Bitcoin mining’s emissions divided by the number of transactions. Mining runs whether or not you send one, so one fewer transaction would not save this much.',
-    src: [['Lucerne University of Applied Sciences and Swiss Economics for the German Environment Agency, reported by Swissinfo (2026): 486 kg CO2', 'https://www.swissinfo.ch/eng/research-frontiers/486-kilos-of-co2-per-bitcoin-transaction/91538797'],
+    src: [['German Environment Agency (2026), TEXTE 41/2026, by Swiss Economics and Lucerne University of Applied Sciences, table 1: 486 kg CO2e per transaction', 'https://www.umweltbundesamt.de/system/files/medien/11850/publikationen/2026-03/41_2026_TEXTE.pdf'],
           ['Digiconomist Bitcoin Energy Consumption Index (read November 2026): 425 kg CO2', 'https://digiconomist.net/bitcoin-energy-consumption']] },
   { id: 'web-search', cat: 'Tech', item: 'Web search', icon: 'search', name: 'Web search', kwh: [0.0003, 0.0003, 0.0003], conf: 'low',
     note: 'Google’s 2009 figure; no newer public estimate exists.',
-    src: [['Google (2009): 0.0003 kWh per search', 'https://publicpolicy.googleblog.com/2009/01/powering-google-search.html'],
-          ['Full Fact (2019): still the latest figure', 'https://fullfact.org/environment/google-search/']] },
+    src: [['Google (2009): 0.0003 kWh per search', 'https://publicpolicy.googleblog.com/2009/01/powering-google-search.html']] },
   { id: 'email', cat: 'Tech', item: 'Email', icon: 'mail', name: 'Simple email', g: [0.3, 4, 4], conf: 'low',
     note: 'Simple email without attachments. Widely repeated estimates disagree ten-fold and none is recent.',
     src: [['ANCT, citing ADEME (2019): a simple email emits 4 g CO2e', 'https://lesbases.anct.gouv.fr/ressources/l-empreinte-carbone-de-nos-emails'],
