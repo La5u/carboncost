@@ -30,4 +30,4 @@ Range view (least to most possible) still needs sourced ends. Food made from Poo
 
 - Low and high: almond milk, fleece, tote bag, paper bag, coffee pod, vape, cigarette, web search, Bitcoin (a per-transaction allocation has no physical best and worst case).
 - One end: oat milk (high), yogurt and butter (studies' averages, not best and worst farms), avocado, streaming (0.2 kWh high is a rough allowance), phone charge, kettle, email (4 g is the 2010 estimate), jeans (21 kg is production only), paper cup (low), plastic bag (low), paper towel (low), tissue (low), receipt, A4 sheet (high), laptop (high), bus and train (fleet averages, not empty and full).
-- Average view: 33 items show a range because their sources disagree by more than about 25% or none gives an average. Finding an agreed average would narrow them; the widest are leather bag (9.4–92 kg), receipt (0.9–9 g), dryer, laundry, tissue and paper towel.
+- Average view: 20 items show a range because studies' averages disagree (mostly world vs national figures). Dryer, laundry and shower averages are from 2013–2016 studies; tissue is one brand, as no study averages across brands.
