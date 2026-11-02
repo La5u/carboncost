@@ -16,7 +16,6 @@ Items to add, once there is a usable per-item source:
 Figures to source better:
 
 - Oat and almond milk: Our World in Data credits Poore & Nemecek (2018), but the paper only gives dairy and soy milk; find where 0.90 and 0.70 kg/litre come from.
-- Food means from Our World in Data: check them against Poore & Nemecek's Data S2 (Science supplement, not openly downloadable).
 - Coffee pod: The Conversation article is the authors' only publication; no paper behind the 27 g was found.
 - Email: no primary source; the 4 g and 0.3 g probably come from Berners-Lee, How Bad Are Bananas? (2010, 2020): check the book.
 - Bacon: Danish Crown's 5.93 kg/kg is only published in the Food Nation Denmark white paper.
