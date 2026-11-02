@@ -316,11 +316,10 @@ window.ITEMS = [
   { id: 'web-search', cat: 'Tech', item: 'Web search', icon: 'search', name: 'Web search', kwh: [0.0003, 0.0003, 0.0003], conf: 'low',
     note: 'Google’s 2009 figure; no newer public estimate exists.',
     src: [['Google (2009): 0.0003 kWh per search', 'https://publicpolicy.googleblog.com/2009/01/powering-google-search.html']] },
-  { id: 'email', cat: 'Tech', item: 'Email', icon: 'mail', name: 'Simple email', g: [0.3, 4, 4], conf: 'low',
-    note: 'Simple email without attachments. Widely repeated estimates disagree ten-fold and none is recent.',
-    src: [['ANCT, citing ADEME (2019): a simple email emits 4 g CO2e', 'https://lesbases.anct.gouv.fr/ressources/l-empreinte-carbone-de-nos-emails'],
-          ['BBC Science Focus (2020): a typical email 4 g CO2', 'https://www.sciencefocus.com/planet-earth/the-thought-experiment-what-is-the-carbon-footprint-of-an-email'],
-          ['James Hutton Institute (2026): around 0.3 g CO2e for a short email', 'https://www.hutton.ac.uk/blog/the-hidden-carbon-footprint-of-emails-why-our-everyday-digital-habits-matter/']] },
+  { id: 'email', cat: 'Tech', item: 'Email', icon: 'mail', name: 'Short email', g: [0.2, 0.3, 4], conf: 'low',
+    note: 'Short email without attachments, counting the devices, network and data centres. The old 4 g figure, still widely repeated, is from the 2010 edition of the same book, which the author has since revised down.',
+    src: [['Berners-Lee (2020), How Bad Are Bananas?, new edition: short email 0.2 g phone to phone, 0.3 g laptop to laptop; spam caught by a filter 0.03 g', 'https://books.google.com/books?id=Pym9DwAAQBAJ'],
+          ['Berners-Lee (2010), How Bad Are Bananas?, first edition: typical email 4 g CO2e, as quoted in later books', '']] },
 
   // Home (electricity only)
   { id: 'dryer', cat: 'Home', item: 'Tumble dryer', icon: 'wind', name: 'Tumble dryer load', kwh: [0.8, 1.5, 3.5], conf: 'medium',
@@ -437,7 +436,7 @@ window.ITEMS = [
           ['German Environment Agency (2022): ordinary paper 822 kg CO2e per tonne → 0.9 g', UBA_PAPER]] },
   { id: 'tissue', cat: 'Disposables', item: 'Tissue', icon: 'sticky-note', name: 'Tissue', g: [2, 6, 8], conf: 'low',
     note: 'Premium boxed facial tissue ≈ 7–8 g over its life; a light 1.5 g tissue ≈ 2–3 g to make.',
-    src: [['Journal of Korea TAPPI (2025), citing Gemechu et al.: 1.31–1.88 kg CO2e per kg of tissue → 2–2.8 g', 'https://www.ktappi.kr/articles/xml/KkeX/'],
+    src: [['Gemechu et al. (2013), Int. J. Life Cycle Assessment 18, abstract: virgin-pulp tissue emits 568 g CO2e per kg more than recycled, about 30% of its total; totals 1.88 and 1.31 kg CO2e per kg, as quoted by Journal of Korea TAPPI (2025) → 2–2.8 g', 'https://doi.org/10.1007/s11367-013-0597-x'],
           ['Essity (2023) EPD: 1.7–3.5 kg CO2e per kg → 2.6–5.3 g', ESSITY],
           ['ERM for Kimberly-Clark (2007), table 4.11: premium facial tissue 37–46 kg CO2e per 5,600 sheets → 6.7–8.2 g', 'https://europeantissue.com/wp-content/uploads/081126-KC-Life-Cycle-Assessment-of-Tissue-products-Final-report-Dec-2007.pdf']] },
 
