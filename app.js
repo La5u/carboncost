@@ -27,12 +27,19 @@ let region = localStorage.getItem('region');
 if (!GRIDS[region]) region = guessRegion();
 // Amount of the selected item: units, km for trips, or its own unit (g, ml, min…). Starts at the default amount.
 let sel, cat, qty;
+// 'avg': the average, or the spread of the sources' averages where they disagree. 'range': least to most possible.
+let view = localStorage.getItem('view') === 'range' ? 'range' : 'avg';
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+// [low, central, high] for a view: the full range, the disputed averages, or just the average.
+const pick = (a, d, v) => (v === 'range' ? a : d ? [d[0], a[1], d[1]] : [a[1], a[1], a[1]]);
 // As given: per unit, per km for trips, or per amt of unit.
-const perUnit = (it) => [0, 1, 2].map((i) => (it.g ? it.g[i] : 0) + (it.kwh ? it.kwh[i] * GRIDS[region][1] : 0));
+const perUnit = (it, v = view) => {
+  const [g, k] = [it.g && pick(it.g, it.disputed?.g, v), it.kwh && pick(it.kwh, it.disputed?.kwh, v)];
+  return [0, 1, 2].map((i) => (g ? g[i] : 0) + (k ? k[i] * GRIDS[region][1] : 0));
+};
 // For the default amount: one unit, an average trip, or amt of unit.
-const grams = (it) => perUnit(it).map((g) => g * (it.km || 1));
+const grams = (it, v) => perUnit(it, v).map((g) => g * (it.km || 1));
 const deflt = (it) => it.km || it.amt || 1;
 // Per one of whatever qty counts.
 const perOne = (it) => grams(it).map((g) => g / deflt(it));
@@ -42,7 +49,7 @@ const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 // Footnote marks: * runs on electricity, † food (counted as bought).
 const star = (it) => (it.kwh ? '*' : '') + (it.cat === 'Food & drink' ? '†' : '');
 // Thousands grouped with a narrow no-break space, e.g. 1 500, so a number never wraps or reads as a decimal comma.
-const fmt = (n, o) => n.toLocaleString('en', o).replace(/,/g, '\u202f');
+const fmt = (n, o) => n.toLocaleString('en', o).replace(/,/g, '\u202f').replace('-', '−');
 const size = (it) => (it.km ? ` (${fmt(it.km)} km trip)` : it.amt ? ` (${fmt(it.amt)} ${it.unit})` : '');
 // Lower-case the first letter of a name inside a sentence, but not of an abbreviation like 'LED'.
 const lc = (s) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
@@ -53,7 +60,7 @@ const sig = (x) => fmt(+x.toPrecision(2), { maximumFractionDigits: 3 });
 // [divisor, word]; words start at 10 000, so 1–9 thousand stays in digits.
 const scale = (n) => [[1e9, ' billion', 1e9], [1e6, ' million', 1e6], [1e3, ' thousand', 1e4]].find(([, , t]) => +n.toPrecision(2) >= t) || [1, ''];
 const big = (n, [d, w] = scale(n)) => sig(n / d) + w;
-const num = (n, s) => (n >= 0.1 ? big(n, s) : '1/' + sig(Math.round(1 / n)));
+const num = (n, s) => (n >= 0.1 ? big(n, s) : n <= 0 ? '0' : '1/' + sig(Math.round(1 / n)));
 // A range of counts in one scale where the low end stays at least 1: "5.6–15 thousand", not "5 600 – 15 thousand".
 const numSpan = (a, b) => {
   const s = scale(b);
@@ -83,21 +90,18 @@ function span(a, b, fmt) {
   const [, xn, xu] = x.match(/^(.*?)( [^\d\s]\S*)?$/), [, yn, yu] = y.match(/^(.*?)( [^\d\s]\S*)?$/);
   return xu === yu ? `${xn}–${yn}${xu || ''}` : `${x} – ${y}`;
 }
-// No consensus between sources: show the range itself instead of a central value.
-const vague = (it) => it.conf === 'low';
-
 function source(it, summary) {
-  const [lo, mid, hi] = perUnit(it);
+  const [aLo, mid, aHi] = perUnit(it, 'avg');
+  const [lo, , hi] = perUnit(it, 'range');
+  const aRng = span(aLo, aHi, mass);
   const rng = span(lo, hi, mass);
-  const [tLo, tMid, tHi] = grams(it);
-  const tRng = span(tLo, tHi, mass);
-  const perTrip = it.km ? `; average trip ${fmt(it.km)} km = ${mass(tMid)}${tRng ? ` (${tRng})` : ''}` : '';
+  const perTrip = it.km ? `; average trip ${fmt(it.km)} km = ${mass(grams(it, 'avg')[1])}` : '';
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${it.kwh[0]}–${it.kwh[2]})` : '';
   const fuel = it.g && it.kwh ? `${it.g[1]} g from fuel + ` : '';
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
   const per = it.km ? ' per km' : it.amt ? '' : ' each';
-  return `<details><summary>${summary}</summary>${esc(it.name)}${it.amt ? size(it) : ''}: ${mass(mid)}${rng ? ` (${rng})` : ''}${per}${elec}${perTrip}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
+  return `<details><summary>${summary}</summary>${esc(it.name)}${it.amt ? size(it) : ''}: average ${mass(mid)}${per}${aRng ? ` (sources disagree: ${aRng})` : ''}${elec}${perTrip}; least to most possible ${rng || mass(mid)}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
 }
 
 function renderNav() {
@@ -119,7 +123,7 @@ function renderHead() {
   const what = sel.km ? 'km by ' + lc(sel.name) : sel.amt ? `${sel.unit} ${lc(sel.name)}` : '× ' + sel.name;
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
     value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span></span><b id="total"></b>
-    <span id="person"></span>${sel.model ? `<span id="model">Based on one model: ${esc(sel.model)}</span>` : ''}</div>`;
+    <span id="person"></span><span id="disp"></span>${sel.model ? `<span id="model">Based on one model: ${esc(sel.model)}</span>` : ''}</div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 1 + 'ch'; };
   fit();
@@ -133,12 +137,12 @@ function renderHead() {
 function renderRows() {
   const [lo, mid, hi] = perOne(sel).map((g) => g * qty);
   const rng = span(lo, hi, mass);
-  const fuzzy = vague(sel) && rng;
   $('#avg').textContent = avg(sel) && qty === deflt(sel) ? ` (${avg(sel)})` : '';
-  $('#total').textContent = (fuzzy ? rng : mass(mid)) + ' CO₂e';
+  $('#total').textContent = (rng || mass(mid)) + ' CO₂e';
+  $('#disp').textContent = view === 'avg' && rng ? 'Sources disagree about the average, so this is the spread of their averages.' : '';
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `About what the average person on Earth emits in ${time(mid)}.`;
-  $('#detail').innerHTML = source(sel, `${rng && !fuzzy ? `range ${rng} · ` : ''}${sel.conf} confidence · sources`);
+  $('#detail').innerHTML = source(sel, `${sel.conf} confidence · sources`);
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
   // Bars: each item's footprint on a log scale, with a tick where the selected amount sits.
@@ -149,14 +153,14 @@ function renderRows() {
   const rows = others.map((it) => {
     const [bLo, bMid, bHi] = grams(it);
     // Widest honest range: low of selected ÷ high of other, and vice versa.
-    const rng = numSpan(lo / bHi, hi / bLo);
-    const fuzzy = (vague(sel) || vague(it)) && rng;
-    return [fuzzy ? rng : num(mid / bMid), it, fuzzy ? '' : rng, bMid];
+    // A low end at or below zero (e.g. chocolate from farms that store carbon) leaves no upper limit.
+    const [a, b] = [Math.max(lo / bHi, 0), bLo > 0 ? hi / bLo : Infinity];
+    return [isFinite(b) ? numSpan(a, b) || num(mid / bMid) : `${num(a)} or more`, it, bMid];
   });
   // Multipliers sit in one right-aligned column, as wide as the longest.
   $('#rows').style.setProperty('--w', Math.max(...rows.map(([m]) => m.length)) + 2 + 'ch');
-  $('#rows').innerHTML = rows.map(([m, it, rng, bMid]) => `<li style="--bar:${pct(bMid)}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${esc(it.name)}${size(it)}${star(it)}</a>
-      <span class="rng">${rng}</span>${source(it, 'source')}</li>`).join('');
+  $('#rows').innerHTML = rows.map(([m, it, bMid]) => `<li style="--bar:${pct(bMid)}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${esc(it.name)}${size(it)}${star(it)}</a>
+      ${source(it, 'source')}</li>`).join('');
 }
 
 function render() {
@@ -167,6 +171,16 @@ function render() {
   renderHead();
   renderRows();
 }
+
+const viewBtns = [...document.querySelectorAll('#views button')];
+const showView = () => viewBtns.forEach((b) => b.classList.toggle('on', b.dataset.v === view));
+viewBtns.forEach((b) => { b.onclick = () => {
+  view = b.dataset.v;
+  localStorage.setItem('view', view);
+  showView();
+  renderRows();
+}; });
+showView();
 
 const regionSel = $('#region');
 regionSel.innerHTML = Object.entries(GRIDS)
