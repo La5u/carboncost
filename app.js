@@ -145,7 +145,7 @@ function renderRows() {
   $('#detail').innerHTML = source(sel, `${sel.conf} confidence · sources`);
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
-  // Bars: each item's footprint on a log scale, with a tick where the selected amount sits.
+  // Bars: each item's footprint on a log scale.
   const logs = ITEMS.map((it) => Math.log(grams(it)[1])).concat(Math.log(mid));
   // The scale starts a little below the smallest item, so even that one gets a visible bar.
   const [lMin, lMax] = [Math.min(...logs) - 1, Math.max(...logs)];
@@ -164,7 +164,6 @@ function renderRows() {
     : sel.amt ? `${fmt(qty)} ${sel.unit} ${lc(sel.name)}` : `${fmt(qty)} × ${lc(sel.name)}`;
   const list = (el, items, row) => {
     const rows = items.map((it) => [row(it), it]);
-    el.style.setProperty('--sel', pct(mid));
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...rows.map(([[m]]) => m.length)) + 2 + 'ch');
     el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${text}</a>
