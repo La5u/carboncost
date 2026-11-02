@@ -41,12 +41,14 @@ const avg = (it) => (it.km ? 'average trip' : it.avg);
 const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 // Footnote marks: * runs on electricity, † food (counted as bought).
 const star = (it) => (it.kwh ? '*' : '') + (it.cat === 'Food & drink' ? '†' : '');
-const size = (it) => (it.km ? ` (${it.km.toLocaleString('en')} km trip)` : it.amt ? ` (${it.amt.toLocaleString('en')} ${it.unit})` : '');
+// Thousands grouped with a narrow no-break space, e.g. 1 500, so a number never wraps or reads as a decimal comma.
+const fmt = (n, o) => n.toLocaleString('en', o).replace(/,/g, '\u202f');
+const size = (it) => (it.km ? ` (${fmt(it.km)} km trip)` : it.amt ? ` (${fmt(it.amt)} ${it.unit})` : '');
 // Lower-case the first letter of a name inside a sentence, but not of an abbreviation like 'LED'.
 const lc = (s) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
 
 // 2 significant figures; values below 0.1 are shown as fractions, e.g. 1/300.
-const sig = (x) => (+x.toPrecision(2)).toLocaleString('en', { maximumFractionDigits: 3 });
+const sig = (x) => fmt(+x.toPrecision(2), { maximumFractionDigits: 3 });
 const num = (n) => (n >= 0.1 ? sig(n) : '1/' + sig(Math.round(1 / n)));
 // World emissions per person per year, to turn a mass into time: "the average person emits this in 3 hours".
 const PERSON_YEAR = byId['person-year'].g[1];
@@ -74,7 +76,7 @@ function source(it, summary) {
   const rng = span(lo, hi, mass);
   const [tLo, tMid, tHi] = grams(it);
   const tRng = span(tLo, tHi, mass);
-  const perTrip = it.km ? `; average trip ${it.km.toLocaleString('en')} km = ${mass(tMid)}${tRng ? ` (${tRng})` : ''}` : '';
+  const perTrip = it.km ? `; average trip ${fmt(it.km)} km = ${mass(tMid)}${tRng ? ` (${tRng})` : ''}` : '';
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${it.kwh[0]}–${it.kwh[2]})` : '';
   const fuel = it.g && it.kwh ? `${it.g[1]} g from fuel + ` : '';
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';

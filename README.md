@@ -24,4 +24,4 @@ Figures to source better:
 - Tissue: Gemechu et al.'s (2013) totals of 1.88 and 1.31 kg/kg come from Journal of Korea TAPPI; they fit the abstract, but the paper is paywalled.
 - Paper straw: read the South African study (Chitaka et al., 2020) cited in the note.
 - Avocado: find a sourced fruit weight instead of a round 100 g.
-- Cruise: find an average trip length instead of a round 1,000 km, and a newer figure in CO2e.
+- Cruise: find an average trip length instead of a round 1 000 km, and a newer figure in CO2e.
