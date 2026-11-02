@@ -39,7 +39,9 @@ const NTS = 'https://assets.publishing.service.gov.uk/media/67aa55cbacab8c9492a4
 const NO_PORTIONS = 'https://www.helsedirektoratet.no/brosjyrer/mal-vekt-og-porsjonsstorrelser-for-matvarer';
 const DESNZ_FACTORS = 'https://assets.publishing.service.gov.uk/media/6846b6ea57f3515d9611f0dd/ghg-conversion-factors-2025-flat-format.xlsx';
 const UKEA_BAGS = 'https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/291023/scho0711buan-e-e.pdf';
-const AGRIBALYSE = 'https://impactco2.fr/outils/alimentation/';
+const AGRIBALYSE = 'https://www.data.gouv.fr/datasets/agribalyse-synthese';
+const CONCITO = 'https://concito.dk/files/media/document/Version%201.2_DK_rev_18122025.xlsx';
+const OWID_MILKS = 'https://ourworldindata.org/grapher/environmental-footprint-milks';
 const FRONTIERS = 'https://www.frontiersin.org/journals/sustainable-food-systems/articles/10.3389/fsufs.2026.1717648/full';
 const DOE_BULBS = 'https://www.energy.gov/cmei/femp/purchasing-energy-efficient-light-bulbs';
 const OWID_TRAVEL = 'https://ourworldindata.org/travel-carbon-footprint';
@@ -95,7 +97,7 @@ window.ITEMS = [
           ['Our World in Data: poultry mean 9.9 kg CO2e/kg → 1.7 kg', OWID_FOOD],
           ['Qian et al. (2022), table 3: poultry 3.65 kg CO2e/kg → 640 g', QIAN],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: raw chicken breast fillet 175 g', NO_PORTIONS],
-          ['CONCITO Big Climate Database v1.2, via Danpo (2024): chicken breast 5.20 kg CO2e/kg → 910 g', 'https://www.danpo.dk/en/consumer/our-products/de-dansk-familiegaarde/carbon-trust/chickens-carbon-footprint-compared-to-other-meats-and-foods']] },
+          ['CONCITO Big Climate Database v1.2 (rev. Dec 2025), DK sheet, Ra00055: raw chicken breast with skin 5.20 kg CO2e/kg → 910 g', CONCITO]] },
   { id: 'lamb', cat: 'Food & drink', item: 'Lamb', icon: 'ham', name: 'Lamb chop', amt: 105, unit: 'g', avg: 'average', g: [4200, 4200, 4300], conf: 'medium',
     note: '105 g of raw meat from a 145 g chop on the bone. Sheep, like cows, release methane.',
     src: [['LSE TPI (2024): lamb & mutton median 40.6 kg CO2e/kg → 4.3 kg', TPI],
@@ -121,7 +123,7 @@ window.ITEMS = [
   { id: 'oat-milk', cat: 'Food & drink', item: 'Dairy', icon: 'wheat', name: 'Oat milk', amt: 200, unit: 'ml', avg: 'average glass', g: [80, 120, 180], conf: 'medium',
     note: 'Includes production and packaging.',
     src: [['Climate Active (2020): Wide Open Agriculture oat milk 0.60 kg CO2e/litre → 120 g', 'https://www.climateactive.org.au/sites/default/files/2020-10/Wide%20Open%20Agriculture_Initial%20cert_Year%201%20FY19-20_PDS_Oat%20Milk%20Product_Final_0.pdf'],
-          ['ProVeg (2019), p. 22: oat milk 0.9 kg CO2e/litre (Poore & Nemecek) → 180 g', 'https://proveg.org/download/20/reports/159301/pv_plant_milk_report_281019-1-2.pdf'],
+          ['Our World in Data, environmental footprints of milks (from Poore & Nemecek 2018): oat milk 0.90 kg CO2e/litre → 180 g', OWID_MILKS],
           ['Diet for a Green Planet (2020), p. 9: Swedish oat drink 0.4–0.5 kg CO2e/litre → 80–100 g', DIET_GREEN]] },
   { id: 'soy-milk', cat: 'Food & drink', item: 'Dairy', icon: 'bean', name: 'Soy milk', amt: 200, unit: 'ml', avg: 'average glass', g: [180, 200, 200], conf: 'medium',
     note: 'Includes production and packaging.',
@@ -129,8 +131,7 @@ window.ITEMS = [
           ['Our World in Data: soy milk mean 0.98 kg CO2e/litre → 200 g', OWID_FOOD]] },
   { id: 'almond-milk', cat: 'Food & drink', item: 'Dairy', icon: 'nut', name: 'Almond milk', amt: 200, unit: 'ml', avg: 'average glass', g: [140, 140, 140], conf: 'medium',
     note: 'World figure. Low in carbon, but thirsty: a separate problem this page does not count.',
-    src: [['Hubbub, from Poore & Nemecek (2018): almond milk 0.7 kg CO2e/litre → 140 g', 'https://hubbub.org.uk/milk-stats'],
-          ['Our World in Data: environmental footprints of milks (Poore & Nemecek)', 'https://ourworldindata.org/grapher/environmental-footprint-milks'],
+    src: [['Our World in Data, environmental footprints of milks (from Poore & Nemecek 2018): almond milk 0.70 kg CO2e/litre → 140 g', OWID_MILKS],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: medium glass 200 ml', NO_PORTIONS]] },
   { id: 'cheese', cat: 'Food & drink', item: 'Dairy', icon: 'pizza', name: 'Cheese', amt: 20, unit: 'g', avg: 'average for a slice of bread', g: [180, 480, 480], conf: 'low',
     note: 'Hard or semi-hard cow’s milk cheese. It takes about 10 litres of milk to make 1 kg of cheese.',
@@ -140,12 +141,12 @@ window.ITEMS = [
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: cheese for a slice of bread 20 g', NO_PORTIONS]] },
   { id: 'yogurt', cat: 'Food & drink', item: 'Dairy', icon: 'ice-cream-bowl', name: 'Plain yogurt', amt: 150, unit: 'g', avg: 'small pot', g: [210, 280, 280], conf: 'medium',
     note: 'Cow’s milk yogurt, including the pot.',
-    src: [['ADEME Agribalyse 3.2 (2025), via Impact CO2: plain yogurt 1.89 kg CO2e/kg → 280 g', AGRIBALYSE + 'yaourt'],
+    src: [['ADEME Agribalyse 3.2, code 19593: plain yogurt 1.89 kg CO2e/kg → 280 g', AGRIBALYSE],
           ['Frontiers in Sustainable Food Systems (2026), table 2: plain low-fat yogurt 1.43 kg CO2e/kg (GWP100) → 210 g', FRONTIERS],
           ['NHS My Health London (2026): yogurt portion 150 g, a small pot', 'https://www.myhealthlondon.nhs.uk/resources/internal/dairy-foods/']] },
   { id: 'butter', cat: 'Food & drink', item: 'Dairy', icon: 'sandwich', name: 'Butter', amt: 5, unit: 'g', avg: 'average for a slice of bread', g: [40, 40, 58], conf: 'medium',
     note: 'It takes about 20 litres of milk to make 1 kg of butter.',
-    src: [['ADEME Agribalyse 3.2 (2025), via Impact CO2: butter 7.91 kg CO2e/kg → 40 g', AGRIBALYSE + 'beurre'],
+    src: [['ADEME Agribalyse 3.2, code 16400: unsalted butter (82% fat) 7.94 kg CO2e/kg → 40 g', AGRIBALYSE],
           ['Frontiers in Sustainable Food Systems (2026), table 2: butter 11.52 kg CO2e/kg (GWP100) → 58 g', FRONTIERS],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: butter for a slice of bread 5 g', NO_PORTIONS]] },
   { id: 'beer', cat: 'Food & drink', item: 'Beer', icon: 'beer', name: 'Beer', amt: 568, unit: 'ml', avg: 'a pint', g: [410, 680, 760], conf: 'medium',
@@ -157,7 +158,7 @@ window.ITEMS = [
     src: [['LSE TPI (2024): rice median 3.7 kg CO2e/kg → 200 g', TPI],
           ['Our World in Data: rice mean 4.45 kg CO2e/kg → 245 g', OWID_FOOD],
           ['Qian et al. (2022), table 3: rice 2.55 kg CO2e/kg → 140 g', QIAN],
-          ['CONCITO Big Climate Database v1.2, via Danpo (2024): parboiled rice 5.06 kg CO2e/kg → 280 g', 'https://www.danpo.dk/en/consumer/our-products/de-dansk-familiegaarde/carbon-trust/chickens-carbon-footprint-compared-to-other-meats-and-foods'],
+          ['CONCITO Big Climate Database v1.2 (rev. Dec 2025), DK sheet, Ra00300: raw parboiled rice 5.06 kg CO2e/kg → 280 g', CONCITO],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: rice portion 55 g uncooked, 160 g cooked', NO_PORTIONS]] },
   { id: 'egg', cat: 'Food & drink', item: 'Egg', icon: 'egg', name: 'Egg', amt: 63, unit: 'g', avg: 'average', g: [220, 290, 290], conf: 'medium',
     note: 'One 63 g egg as bought, with the shell.',
