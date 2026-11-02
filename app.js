@@ -49,7 +49,16 @@ const lc = (s) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
 
 // 2 significant figures; values below 0.1 are shown as fractions, e.g. 1/300.
 const sig = (x) => fmt(+x.toPrecision(2), { maximumFractionDigits: 3 });
-const num = (n) => (n >= 0.1 ? sig(n) : '1/' + sig(Math.round(1 / n)));
+// Big counts in words, e.g. 240 thousand, 1.2 million: easier to read than a row of digits.
+// [divisor, word]; words start at 10 000, so 1–9 thousand stays in digits.
+const scale = (n) => [[1e9, ' billion', 1e9], [1e6, ' million', 1e6], [1e3, ' thousand', 1e4]].find(([, , t]) => +n.toPrecision(2) >= t) || [1, ''];
+const big = (n, [d, w] = scale(n)) => sig(n / d) + w;
+const num = (n, s) => (n >= 0.1 ? big(n, s) : '1/' + sig(Math.round(1 / n)));
+// A range of counts in one scale where the low end stays at least 1: "5.6–15 thousand", not "5 600 – 15 thousand".
+const numSpan = (a, b) => {
+  const s = scale(b);
+  return span(a, b, (n) => num(n, a >= s[0] && s[0] > 1 ? s : undefined));
+};
 // World emissions per person per year, to turn a mass into time: "the average person emits this in 3 hours".
 const PERSON_YEAR = byId['person-year'].g[1];
 function time(g) {
@@ -67,7 +76,13 @@ function mass(g) {
 }
 
 // "a – b", or '' when both ends format the same (only one sourced figure).
-const span = (a, b, fmt) => (fmt(a) === fmt(b) ? '' : `${fmt(a)} – ${fmt(b)}`);
+// A shared unit is written once: "4–20 kg", but "300 g – 2 kg".
+function span(a, b, fmt) {
+  const [x, y] = [fmt(a), fmt(b)];
+  if (x === y) return '';
+  const [, xn, xu] = x.match(/^(.*?)( [^\d\s]\S*)?$/), [, yn, yu] = y.match(/^(.*?)( [^\d\s]\S*)?$/);
+  return xu === yu ? `${xn}–${yn}${xu || ''}` : `${x} – ${y}`;
+}
 // No consensus between sources: show the range itself instead of a central value.
 const vague = (it) => it.conf === 'low';
 
@@ -126,14 +141,22 @@ function renderRows() {
   $('#detail').innerHTML = source(sel, `${rng && !fuzzy ? `range ${rng} · ` : ''}${sel.conf} confidence · sources`);
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
-  $('#rows').innerHTML = others.map((it) => {
+  // Bars: each item's footprint on a log scale, with a tick where the selected amount sits.
+  const logs = ITEMS.map((it) => Math.log(grams(it)[1])).concat(Math.log(mid));
+  const [lMin, lMax] = [Math.min(...logs), Math.max(...logs)];
+  const pct = (g) => (((Math.log(g) - lMin) / (lMax - lMin)) * 100).toFixed(1) + '%';
+  $('#rows').style.setProperty('--sel', pct(mid));
+  const rows = others.map((it) => {
     const [bLo, bMid, bHi] = grams(it);
     // Widest honest range: low of selected ÷ high of other, and vice versa.
-    const rng = span(lo / bHi, hi / bLo, num);
+    const rng = numSpan(lo / bHi, hi / bLo);
     const fuzzy = (vague(sel) || vague(it)) && rng;
-    return `<li><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${fuzzy ? rng : num(mid / bMid)} ×</b> ${esc(it.name)}${size(it)}${star(it)}</a>
-      <span class="rng">${fuzzy ? '' : rng}</span>${source(it, 'source')}</li>`;
-  }).join('');
+    return [fuzzy ? rng : num(mid / bMid), it, fuzzy ? '' : rng, bMid];
+  });
+  // Multipliers sit in one right-aligned column, as wide as the longest.
+  $('#rows').style.setProperty('--w', Math.max(...rows.map(([m]) => m.length)) + 2 + 'ch');
+  $('#rows').innerHTML = rows.map(([m, it, rng, bMid]) => `<li style="--bar:${pct(bMid)}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${esc(it.name)}${size(it)}${star(it)}</a>
+      <span class="rng">${rng}</span>${source(it, 'source')}</li>`).join('');
 }
 
 function render() {

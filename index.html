@@ -39,8 +39,12 @@
   #detail details { margin: 0; font-size: .85rem; }
   .rng { color: #666; font-size: .85em; }
   #rows { list-style: none; padding: 0; margin: 0; }
-  #rows li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .3rem 0; border-top: 1px solid #ddd; }
+  #rows li { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .3rem 0 .45rem; border-top: 1px solid #ddd; }
   #rows a { text-decoration: none; }
+  #rows b { display: inline-block; min-width: var(--w); text-align: right; font-variant-numeric: tabular-nums; }
+  #rows li::before, #rows li::after { content: ''; position: absolute; bottom: .15rem; height: 3px; }
+  #rows li::before { left: 0; width: var(--bar); background: #bbb; }
+  #rows li::after { left: var(--sel); width: 2px; margin-left: -1px; background: #000; }
   details { margin-left: auto; font-size: .8rem; color: #666; }
   details[open] { flex-basis: 100%; margin-left: 1.5rem; }
   summary { cursor: pointer; }
@@ -68,7 +72,7 @@
     thrown away along the way. Food you throw away at home is included too, since you bought it. Cooking is not.</p>
   <p>CO₂e (CO₂-equivalent) counts all greenhouse gases, not just CO₂, as the amount of CO₂ that would warm the planet as much.
   Every figure links to at least one published source. Grey numbers are the range from best case to worst case;
-  where sources disagree a lot, we show only the range. “Confidence” says how well the sources agree.</p>
+  where sources disagree a lot, we show only the range. The grey bars show each item's footprint on a log scale; the black tick marks the item you picked. “Confidence” says how well the sources agree.</p>
 </footer>
 <script src="icons.js"></script>
 <script src="data.js"></script>
