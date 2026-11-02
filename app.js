@@ -101,7 +101,7 @@ function source(it, summary) {
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
   const per = it.km ? ' per km' : it.amt ? '' : ' each';
-  return `<details><summary>${summary}</summary>${esc(it.name)}${it.amt ? size(it) : ''}: average ${mass(mid)}${per}${aRng ? ` (sources disagree: ${aRng})` : ''}${elec}${perTrip}; least to most possible ${rng || mass(mid)}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
+  return `<details><summary>${summary}</summary>${esc(it.name)}${it.amt ? size(it) : ''}: ${aRng ? `no agreed average, sources range ${aRng}${per}, central ${mass(mid)}` : `average ${mass(mid)}${per}`}${elec}${perTrip}; least to most possible ${rng || mass(mid)}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
 }
 
 function renderNav() {
@@ -139,15 +139,16 @@ function renderRows() {
   const rng = span(lo, hi, mass);
   $('#avg').textContent = avg(sel) && qty === deflt(sel) ? ` (${avg(sel)})` : '';
   $('#total').textContent = (rng || mass(mid)) + ' CO₂e';
-  $('#disp').textContent = view === 'avg' && rng ? 'Sources disagree about the average, so this is the spread of their averages.' : '';
+  $('#disp').textContent = view === 'avg' && rng ? 'No agreed average: this is how far apart the sources’ estimates are.' : '';
   $('#person').textContent = sel.id === 'person-year' ? ''
-    : `About what the average person on Earth emits in ${time(mid)}.`;
+    : `About what the average person on Earth emits in ${rng && lo > 0 ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
   $('#detail').innerHTML = source(sel, `${sel.conf} confidence · sources`);
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
   // Bars: each item's footprint on a log scale, with a tick where the selected amount sits.
   const logs = ITEMS.map((it) => Math.log(grams(it)[1])).concat(Math.log(mid));
-  const [lMin, lMax] = [Math.min(...logs), Math.max(...logs)];
+  // The scale starts a little below the smallest item, so even that one gets a visible bar.
+  const [lMin, lMax] = [Math.min(...logs) - 1, Math.max(...logs)];
   const pct = (g) => (((Math.log(g) - lMin) / (lMax - lMin)) * 100).toFixed(1) + '%';
   $('#rows').style.setProperty('--sel', pct(mid));
   const rows = others.map((it) => {
