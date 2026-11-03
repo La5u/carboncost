@@ -26,7 +26,19 @@ function guessRegion() {
 let region = localStorage.getItem('region');
 if (!GRIDS[region]) region = guessRegion();
 // Amount of the selected item: units, km for trips, or its own unit (g, ml, min…). Starts at the default amount.
-let sel, cat, qty;
+let sel, cat, qty, often;
+const OFTEN = { once: ['once', 1], day: ['a day', 365.25], week: ['a week', 52.18], month: ['a month', 12], year: ['a year', 1] };
+const annual = (n, o) => n * (OFTEN[o]?.[1] || 1);
+const hash = (id, n, o) => `#${id}/${n}${o && o !== 'once' ? '/' + o : ''}`;
+const save = () => history.replaceState(null, '', hash(sel.id, qty, often));
+// Warn once, rather than on every change of amount or grid.
+const valid = (rows, ids) => rows.filter((row) => {
+  const missing = ids(row).filter((id) => id && !byId[id]);
+  if (missing.length) console.warn(`Skipping ${row.id || row.q}: missing ${missing.join(', ')}`);
+  return !missing.length;
+});
+const switches = valid(SWITCHES, (s) => [s.upfront, s.instead, s.per, s.minus]);
+const questions = valid(QUESTIONS, (q) => [q.a[0], q.b[0]]);
 // 'avg': the average, or the spread of the sources' averages where they disagree. 'range': least to most possible.
 let view = localStorage.getItem('view') === 'range' ? 'range' : 'avg';
 
@@ -125,7 +137,8 @@ function renderHead() {
   $('#variants').innerHTML = vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}${weak(v) ? ' weak' : ''}">${esc(v.name)}</a>`).join('');
   const what = sel.km ? 'km by ' + lc(sel.name) : sel.amt ? `${sel.unit} ${lc(sel.name)}` : '× ' + sel.name;
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
-    value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span></span><b id="total"></b>
+    value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span>
+    <select id="often" aria-label="How often">${Object.entries(OFTEN).map(([k, [label]]) => `<option value="${k}"${k === often ? ' selected' : ''}>${label}</option>`).join('')}</select></span><b id="total"></b>
     <span id="person"></span><span id="disp"></span>${weak(sel) ? `<span id="weak">${sel.one ? 'Only one source' : 'Low confidence'}: treat this figure as rough.</span>` : ''}${sel.model ? `<span id="model">Based on one model: ${esc(sel.model)}</span>` : ''}</div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 1 + 'ch'; };
@@ -133,15 +146,30 @@ function renderHead() {
   input.oninput = () => {
     fit();
     const v = parseFloat(input.value);
-    if (v > 0) { qty = v; renderRows(); }
+    if (Number.isFinite(v) && v > 0) { qty = v; save(); renderRows(); }
   };
+  $('#often').onchange = () => { often = $('#often').value; save(); renderRows(); };
+}
+
+// Widest honest ratio: a non-positive divisor leaves no upper limit.
+function ratio([xLo, xMid, xHi], [yLo, yMid, yHi]) {
+  const [a, b] = [Math.max(xLo / yHi, 0), yLo > 0 ? xHi / yLo : Infinity];
+  return isFinite(b) ? numSpan(a, b) || num(xMid / yMid) : `${num(a)} or more`;
+}
+
+// An amount of an item in words, e.g. '11 900 km by petrol car', with ', every day' when repeated.
+// bare: just the name, when the amount is the default and saying it would only lengthen the row.
+function label(it, n, o = 'once', bare) {
+  const a = bare && o === 'once' ? lc(it.name) : it.km ? `${fmt(n)} km by ${lc(it.name)}`
+    : it.amt ? `${fmt(n)} ${it.unit} ${lc(it.name)}` : `${fmt(n)} × ${lc(it.name)}`;
+  return a + (o === 'once' ? '' : `, every ${o}`);
 }
 
 function renderRows() {
-  const [lo, mid, hi] = perOne(sel).map((g) => g * qty);
+  const [lo, mid, hi] = perOne(sel).map((g) => g * annual(qty, often));
   const rng = span(lo, hi, mass);
   $('#avg').textContent = avg(sel) && qty === deflt(sel) ? ` (${avg(sel)})` : '';
-  $('#total').textContent = (rng || mass(mid)) + ' CO₂e';
+  $('#total').textContent = (rng || mass(mid)) + ' CO₂e' + (often === 'once' ? '' : ' a year');
   $('#disp').textContent = view === 'avg' && rng ? 'No agreed average: this is how far apart the sources’ estimates are.' : '';
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `About what the average person on Earth emits in ${rng && lo > 0 ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
@@ -154,18 +182,11 @@ function renderRows() {
   // The scale starts a little below the smallest item, so even that one gets a visible bar.
   const [lMin, lMax] = [Math.min(...logs) - 1, Math.max(...logs)];
   const pct = (g) => (((Math.log(g) - lMin) / (lMax - lMin)) * 100).toFixed(1) + '%';
-  // Widest honest range of x / y: low ÷ high and high ÷ low. A low end at or below zero
-  // (e.g. chocolate from farms that store carbon) leaves no upper limit.
-  const ratio = ([xLo, xMid, xHi], [yLo, yMid, yHi]) => {
-    const [a, b] = [Math.max(xLo / yHi, 0), yLo > 0 ? xHi / yLo : Infinity];
-    return isFinite(b) ? numSpan(a, b) || num(xMid / yMid) : `${num(a)} or more`;
-  };
   const mine = [lo, mid, hi];
   // Smaller items: how many of them match yours. Bigger ones: how many of yours match one of them.
   const smaller = others.filter((it) => grams(it)[1] <= mid), bigger = others.filter((it) => grams(it)[1] > mid);
   // Your item as named in the bigger rows; the amount only when you changed it, to keep rows short.
-  const yours = qty === deflt(sel) ? lc(sel.name) : sel.km ? `${fmt(qty)} km ${lc(sel.name)}`
-    : sel.amt ? `${fmt(qty)} ${sel.unit} ${lc(sel.name)}` : `${fmt(qty)} × ${lc(sel.name)}`;
+  const yours = label(sel, qty, often, qty === deflt(sel));
   const list = (el, items, row) => {
     const rows = items.map((it) => [row(it), it]);
     // Multipliers sit in one right-aligned column, as wide as the longest.
@@ -177,11 +198,48 @@ function renderRows() {
   const name = (it) => `${esc(it.name)}${size(it)}${star(it)}`;
   list($('#rows'), smaller, (it) => [ratio(mine, grams(it)), name(it)]);
   list($('#rows2'), bigger, (it) => [ratio(grams(it), mine), `${esc(yours)} = ${name(it)}`]);
+  renderSwitches();
+  renderQuestions();
+}
+
+function renderSwitches() {
+  const link = (id, label = byId[id].name) => `<a href="#${id}">${esc(label)}</a>`;
+  $('#switches').innerHTML = switches.filter((s) => [s.upfront, s.instead, s.per, s.minus].includes(sel.id)).map((s) => {
+    // Upfront counts a whole item; savings count one km, gram, kWh, etc.
+    const up = grams(byId[s.upfront]), minus = s.minus ? grams(byId[s.minus]) : [0, 0, 0];
+    const before = perOne(byId[s.instead]), after = s.per ? perOne(byId[s.per]) : [0, 0, 0];
+    const net = [up[0] - minus[2], up[1] - minus[1], up[2] - minus[0]];
+    const saving = [before[0] - after[2], before[1] - after[1], before[2] - after[0]];
+    const n = [0, 1, 2].map((i) => saving[2 - i] > 0 ? Math.max(0, net[i]) / saving[2 - i] : Infinity);
+    const counts = (a, b) => !isFinite(a) ? 'never' : !isFinite(b) ? `${num(a)} to never` : numSpan(a, b) || num(a);
+    const uses = view === 'range' ? counts(n[0], n[2]) : num(n[1]);
+    // Under a year reads better in months.
+    const yrs = s.perYear && n.map((x) => x / s.perYear.n);
+    const [k, u] = yrs && (view === 'range' ? yrs[2] : yrs[1]) < 1 ? [12, 'months'] : [1, 'years'];
+    const years = s.perYear && saving[1] > 0 ? ` (about ${view === 'range' ? counts(yrs[0] * k, yrs[2] * k) : sig(yrs[1] * k)} ${u} at ${num(s.perYear.n)} ${esc(s.unit)} a year)` : '';
+    const result = saving[1] <= 0 ? 'Never pays back on this grid' : `pays back after ${uses} ${esc(s.unit)}${years}`;
+    const [a, b] = s.name.split(' instead of ');
+    const name = b ? `${link(s.upfront, a)} instead of ${link(s.instead, b)}` : esc(s.name);
+    const figures = [s.upfront, s.minus, s.instead, s.per].filter(Boolean).map((id) => source(byId[id], esc(byId[id].name))).join('');
+    return `<li><span>${name}: ${result}.</span><details><summary>figures · sources</summary>
+      <p>Upfront: ${link(s.upfront)}${s.minus ? ` minus ${link(s.minus)}` : ''}. Each use: ${s.per ? link(s.per) : 'nothing'} instead of ${link(s.instead)}.</p>${s.note ? `<p>${esc(s.note)}</p>` : ''}${s.perYear ? `<p>A year: <a href="${esc(s.perYear.src[1])}" rel="noopener">${esc(s.perYear.src[0])}</a></p>` : ''}${figures}</details></li>`;
+  }).join('');
+  $('#break-even').hidden = !$('#switches').children.length;
+}
+
+function renderQuestions() {
+  const total = ([id, n, o]) => perOne(byId[id]).map((g) => g * annual(n, o));
+  const footprint = ([lo, mid, hi]) => span(lo, hi, mass) || mass(mid);
+  const side = ([id, n, o]) => `${esc(label(byId[id], n, o))}: ${footprint(total([id, n, o]))}`;
+  $('#questions').innerHTML = questions.map(({ q, a, b }) => `<li><span><a href="${hash(...a)}">${esc(q)}</a>
+    ${side(a)}; ${side(b)}. The first is ${ratio(total(a), total(b))} × the second.</span></li>`).join('');
 }
 
 function render() {
-  sel = byId[location.hash.slice(1)] || ITEMS[0];
-  qty = deflt(sel);
+  const [id, n, o] = location.hash.slice(1).split('/');
+  sel = byId[id] || ITEMS[0];
+  qty = Number.isFinite(+n) && +n > 0 ? +n : deflt(sel);
+  often = Object.hasOwn(OFTEN, o) ? o : 'once';
   cat = sel.cat;
   renderNav();
   renderHead();

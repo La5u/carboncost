@@ -12,8 +12,17 @@ Items to add, once there is a usable per-item source:
 - TV on standby
 - SUV
 - Plastic takeaway container
+- Steel water bottle, for a break-even against plastic bottles: needs a sourced whole-bottle figure (Dettore 2009 gives 7.7 kg CO2e per kg of steel bottle, but not the steel mass of today's bottles)
+- Cloth nappies, for a break-even against disposables: the UK Environment Agency (2008) gives 568.9 kg over 2.5 years, but no clean split between making them and washing them
+- Walking, second-hand clothes
 
 Figures to source better:
+
+- Dishwasher and washing up by hand: one tested machine and one UK test group (Berkholz et al. 2010); find a range.
+- Heat pump: making one is a single Vaillant EPD; heat from one is a single UK field trial (SPF 2.82). The yearly heat (7 800 kWh) assumes all of a typical home's gas goes to heating.
+- Dog: the range (Martens et al. 2019) and the central figure (Pedrinelli et al. 2022) come from different studies; cat has no sourced average.
+- Making a car: one ICCT (2021) table; add a second LCA. Break-even years use a 2019 England mileage.
+- Private jet: the low and high ends are fuel-burn extremes from one study.
 
 - Oat and almond milk: Our World in Data credits Poore & Nemecek (2018), but the paper only gives dairy and soy milk; find where 0.90 and 0.70 kg/litre come from.
 - Coffee pod: The Conversation article is the authors' only publication; no paper behind the 27 g was found.
