@@ -47,7 +47,6 @@ const perOne = (it) => grams(it).map((g) => g / deflt(it));
 const avg = (it) => (it.km ? 'average trip' : it.avg);
 // Faded: low confidence, or only one study or dataset behind the figure.
 const weak = (it) => it.conf === 'low' || it.one;
-const weakAttr = (it) => (weak(it) ? ` class="weak" title="${it.one ? 'Only one source' : 'Low confidence'}"` : '');
 const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 // Footnote marks: * runs on electricity, † food (counted as bought).
 const star = (it) => (it.kwh ? '*' : '') + (it.cat === 'Food & drink' ? '†' : '');
@@ -146,7 +145,8 @@ function renderRows() {
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `About what the average person on Earth emits in ${rng && lo > 0 ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
   $('#detail').innerHTML = source(sel, `${sel.conf} confidence · sources`);
-  const others = Object.values(groups).filter((g) => g[0].item !== sel.item).map((g) => g[0])
+  // Only well-sourced items are compared against; faded ones are still listed in the item bar.
+  const others = Object.values(groups).filter((g) => g[0].item !== sel.item && !weak(g[0])).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
   // Bars: each item's footprint on a log scale.
   const logs = ITEMS.map((it) => Math.log(grams(it)[1])).concat(Math.log(mid));
@@ -169,7 +169,7 @@ function renderRows() {
     const rows = items.map((it) => [row(it), it]);
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...rows.map(([[m]]) => m.length)) + 2 + 'ch');
-    el.innerHTML = rows.map(([[m, text], it]) => `<li${weakAttr(it)} style="--bar:${pct(grams(it)[1])}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${text}</a>
+    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${text}</a>
       ${source(it, 'source')}</li>`).join('');
     el.previousElementSibling.hidden = !items.length;
   };
