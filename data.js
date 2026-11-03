@@ -5,7 +5,8 @@
 // Each entry gives either:
 //   g:   [low, central, high] grams CO2e per unit, and/or
 //   kwh: [low, central, high] kWh per unit; grams = g + kWh × grid intensity.
-// [low, high] is least to most possible (the Range view). disputed: { g or kwh: [low, high] } is set
+// [low, high] is least to most possible (the Range view). Where an entry has both g and kwh, each
+// position is one scenario (e.g. small car: little fuel, more electricity), so kwh alone need not be in order. disputed: { g or kwh: [low, high] } is set
 // where the sources' estimates of a typical unit differ by more than about 25%, or no source gives an
 // average; the Average view then shows that spread instead of the central value.
 // low == high means only one sourced figure exists, so no range is shown.
@@ -90,7 +91,7 @@ window.ITEMS = [
     note: '130 g of raw meat from a 170 g loin chop on the bone.',
     src: [['Poore & Nemecek (2018), data S2: pig meat 5th–95th percentile 6.91–23.8 kg CO2e/kg → 900 g – 3.1 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: pig meat mean 12.3 kg CO2e/kg → 1.6 kg', POORE_S2],
-          ['Qian et al. (2022), table 3: pork 5.77 kg CO2e/kg → 750 g', QIAN],
+          ['Qian et al. (2022), table 3, from Clune et al. (2017) median: pork 5.77 kg CO2e/kg → 750 g', QIAN],
           ['CarbonCloud: UK boneless pork loin chop 5.60 kg CO2e/kg → 730 g', 'https://apps.carboncloud.com/climatehub/product-reports/id/82272696481'],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: loin chop with bone 170 g, 130 g without', NO_PORTIONS]] },
   { id: 'bacon', cat: 'Food & drink', item: 'Pork', icon: 'ham', name: 'Bacon', amt: 65, unit: 'g', avg: 'average: 2 rashers', g: [390, 800, 1500], conf: 'low',
@@ -104,7 +105,7 @@ window.ITEMS = [
     note: '175 g raw boneless chicken; sources cover poultry meat in general.',
     src: [['Poore & Nemecek (2018), data S2: poultry 5th–95th percentile 3.95–20.8 kg CO2e/kg → 690 g – 3.6 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: poultry mean 9.9 kg CO2e/kg → 1.7 kg', POORE_S2],
-          ['Qian et al. (2022), table 3: poultry 3.65 kg CO2e/kg → 640 g', QIAN],
+          ['Qian et al. (2022), table 3, from Clune et al. (2017) median: poultry 3.65 kg CO2e/kg → 640 g', QIAN],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: raw chicken breast fillet 175 g', NO_PORTIONS],
           ['CONCITO Big Climate Database v1.2 (rev. Dec 2025), DK sheet, Ra00055: raw chicken breast with skin 5.20 kg CO2e/kg → 910 g', CONCITO]] },
   { id: 'lamb', cat: 'Food & drink', item: 'Lamb', icon: 'ham', name: 'Lamb chop', amt: 105, unit: 'g', avg: 'average', g: [2500, 4200, 6300], conf: 'medium',
@@ -168,14 +169,14 @@ window.ITEMS = [
     note: 'Flooded paddies release methane.',
     src: [['Poore & Nemecek (2018), data S2: rice 5th–95th percentile 1.15–10.3 kg CO2e/kg → 63–560 g', POORE_S2],
           ['Poore & Nemecek (2018), data S2: rice mean 4.45 kg CO2e/kg → 245 g', POORE_S2],
-          ['Qian et al. (2022), table 3: rice 2.55 kg CO2e/kg → 140 g', QIAN],
+          ['Qian et al. (2022), table 3, from Clune et al. (2017) median: rice 2.55 kg CO2e/kg → 140 g', QIAN],
           ['CONCITO Big Climate Database v1.2 (rev. Dec 2025), DK sheet, Ra00300: raw parboiled rice 5.06 kg CO2e/kg → 280 g', CONCITO],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: rice portion 55 g uncooked, 160 g cooked', NO_PORTIONS]] },
   { id: 'egg', cat: 'Food & drink', item: 'Egg', icon: 'egg', name: 'Egg', amt: 63, unit: 'g', avg: 'average', g: [180, 290, 530], disputed: { g: [220, 290] }, conf: 'medium',
     note: 'One 63 g egg as bought, with the shell.',
     src: [['Poore & Nemecek (2018), data S2: eggs 5th–95th percentile 2.85–8.49 kg CO2e/kg → 180–530 g', POORE_S2],
           ['Poore & Nemecek (2018), data S2: eggs mean 4.67 kg CO2e/kg → 290 g', POORE_S2],
-          ['Qian et al. (2022), table 3: eggs 3.46 kg CO2e/kg → 220 g', QIAN],
+          ['Qian et al. (2022), table 3, from Clune et al. (2017) median: eggs 3.46 kg CO2e/kg → 220 g', QIAN],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: raw egg with shell 63 g', NO_PORTIONS]] },
   { id: 'coffee', cat: 'Food & drink', item: 'Coffee', icon: 'coffee', name: 'Black coffee', amt: 170, unit: 'ml', avg: 'average cup', g: [44, 285, 860], conf: 'low',
     note: 'Brewed from 10 g of roasted coffee; excludes boiling the water. ' + MEAN_NOTE,
@@ -199,7 +200,7 @@ window.ITEMS = [
   { id: 'avocado', cat: 'Food & drink', item: 'Fruit & veg', icon: 'leaf', name: 'Avocado', amt: 100, unit: 'g', g: [46, 64, 152], disputed: { g: [46, 64] }, conf: 'low',
     note: 'Farm to market, except the high end, which is an older Australian figure for the farm alone. Unlike most food here, the sources do not add food lost or thrown away.',
     src: [['Department of Primary Industries WA (2023), table 1: Western Australia to market 0.459–0.486 kg CO2e/kg → 46–49 g', 'https://web-prd.dpird.wa.gov.au/contentassets/c49f8d82a1444d68a398bd579adf5945/wa-avocado--life-cycle-analysis-lca.pdf'],
-          ['Same table, Stössel (2021): global average to market 0.638 kg CO2e/kg → 64 g', 'https://web-prd.dpird.wa.gov.au/contentassets/c49f8d82a1444d68a398bd579adf5945/wa-avocado--life-cycle-analysis-lca.pdf'],
+          ['Stössel (2021), as quoted in the same table: global average to market 0.638 kg CO2e/kg → 64 g', 'https://web-prd.dpird.wa.gov.au/contentassets/c49f8d82a1444d68a398bd579adf5945/wa-avocado--life-cycle-analysis-lca.pdf'],
           ['Same table, Eady and Hercule (2012): Brisbane production 1.314–1.522 kg CO2e/kg → 131–152 g', 'https://web-prd.dpird.wa.gov.au/contentassets/c49f8d82a1444d68a398bd579adf5945/wa-avocado--life-cycle-analysis-lca.pdf']] },
   { id: 'apple', cat: 'Food & drink', item: 'Fruit & veg', icon: 'apple', name: 'Apple', amt: 140, unit: 'g', avg: 'average', g: [36, 60, 84], conf: 'medium',
     note: 'Weighed whole, as bought.',
@@ -308,16 +309,16 @@ window.ITEMS = [
     src: [['IEA (2020): 0.077 kWh per hour of typical Netflix viewing; 0.037 kWh on a phone over Wi-Fi', 'https://www.iea.org/commentaries/the-carbon-footprint-of-streaming-video-fact-checking-the-headlines'],
           ['Carbon Trust (2021): 55 g CO2e per hour, European average', 'https://www.carbontrust.com/news-and-insights/news/updated-calculation-released-on-the-carbon-impact-of-online-video-streaming']] },
   { id: 'phone-charge', cat: 'Tech', item: 'Phone charge', icon: 'battery-charging', name: 'Full phone charge (0 → 100%)', kwh: [0.0245, 0.025, 0.031], one: true, conf: 'low',
-    note: '5 000 mAh battery at 4 V = 20 Wh, measured at the wall with 65–82% charging efficiency.',
-    src: [['DXOMARK (2021): 5 000 mAh, 4 V battery holds 20 Wh; 25 Wh from the wall at 80% efficiency', 'https://www.dxomark.com/how-dxomark-tests-the-smartphone-battery-experience/']] },
+    note: '5 000 mAh battery at 4 V = 20 Wh, charged at 65–82% efficiency, the range DXOMARK measures across phones. A worked calculation, not a measurement of one phone.',
+    src: [['DXOMARK (2021), worked example: 5 000 mAh, 4 V battery holds 20 Wh; 25 Wh from the wall at 80% efficiency; measured efficiencies 65–81.5%', 'https://www.dxomark.com/how-dxomark-tests-the-smartphone-battery-experience/']] },
   { id: 'ai-prompt', cat: 'Tech', item: 'AI', icon: 'message-square', name: 'AI text prompt (GPT-4o, Gemini)', kwh: [0.00018, 0.0003, 0.00067], disputed: { kwh: [0.00024, 0.00034] }, conf: 'medium',
     note: 'A short prompt and reply: Epoch AI estimated ChatGPT’s GPT-4o, Google measured Gemini, Oviedo et al. modelled frontier models. Electricity only. Long inputs and reasoning can use 10× more.',
     src: [['Google (2025), table 1: median Gemini Apps text prompt 0.24 Wh', 'https://services.google.com/fh/files/misc/measuring_the_environmental_impact_of_delivering_ai_at_google_scale.pdf'],
           ['Epoch AI (2025): typical GPT-4o query roughly 0.3 Wh', 'https://epoch.ai/gradient-updates/how-much-energy-does-chatgpt-use'],
           ['Oviedo et al. (2025): frontier-model median 0.34 Wh, middle half 0.18–0.67 Wh', 'https://arxiv.org/abs/2509.20241']] },
   { id: 'ai-coding', cat: 'Tech', item: 'AI', icon: 'code-xml', name: 'Day of coding with AI agents (Claude Code)', kwh: [1.2, 3, 5.9], disputed: { kwh: [1.3, 3] }, conf: 'low',
-    note: 'A programmer’s working day with coding agents such as Claude Code, often several at once; data-centre electricity only. Two heavy users counted their own tokens, and agree on energy per token within a third; one session can be 15 times another, so a day is a steadier unit. Energy per token is estimated, since AI companies do not publish it.',
-    src: [['Hausfather (2026), The Climate Brink: average day 3.0 kWh (1.2–5.9) over 8 weeks; 170 kWh for 3.2 billion tokens, about 53 Wh per million', 'https://skepticalscience.com/print.php?n=6600'],
+    note: 'A programmer’s working day with coding agents such as Claude Code, often several at once; data-centre electricity only. Two heavy users counted their own tokens, so this is a heavy day rather than a typical one; and agree on energy per token within a third; one session can be 15 times another, so a day is a steadier unit. Energy per token is estimated, since AI companies do not publish it.',
+    src: [['Hausfather (2026), The Climate Brink: his own average day 3.0 kWh (1.2–5.9 depending on assumptions) over 8 weeks; 170 kWh for 3.2 billion tokens, about 53 Wh per million', 'https://skepticalscience.com/print.php?n=6600'],
           ['Couch (2026): median day 1.3 kWh, running 2 or 3 agents for a few hours; median session 41 Wh for 592 439 tokens, about 69 Wh per million', 'https://simonpcouch.com/blog/2026-01-20-cc-impact/']] },
   { id: 'ai-image', cat: 'Tech', item: 'AI', icon: 'image', name: 'AI-generated image (open models)', kwh: [0.0005, 0.003, 0.01], conf: 'low',
     note: 'Electricity only. Rough benchmark across open models; models differ up to 46-fold.',
@@ -329,7 +330,7 @@ window.ITEMS = [
     src: [['German Environment Agency (2026), TEXTE 41/2026, by Swiss Economics and Lucerne University of Applied Sciences, table 1: 486 kg CO2e per transaction', 'https://www.umweltbundesamt.de/system/files/medien/11850/publikationen/2026-03/41_2026_TEXTE.pdf'],
           ['Digiconomist Bitcoin Energy Consumption Index (read November 2026): 425 kg CO2', 'https://digiconomist.net/bitcoin-energy-consumption']] },
   { id: 'web-search', cat: 'Tech', item: 'Web search', icon: 'search', name: 'Web search', kwh: [0.0003, 0.0003, 0.0003], one: true, conf: 'low',
-    note: 'Google’s 2009 figure; no newer public estimate exists.',
+    note: 'Google’s 2009 figure; we found no newer estimate covering a whole search.',
     src: [['Google (2009): 0.0003 kWh per search', 'https://publicpolicy.googleblog.com/2009/01/powering-google-search.html']] },
   { id: 'email', cat: 'Tech', item: 'Email', icon: 'mail', name: 'Short email', g: [0.2, 0.3, 4], conf: 'low',
     note: 'Short email without attachments, counting the devices, network and data centres. The old 4 g figure, still widely repeated, is from the 2010 edition of the same book, which the author has since revised down.',
@@ -464,7 +465,7 @@ window.ITEMS = [
     note: 'One boxed facial tissue over its life, including the box, transport and disposal. No study gives an average across brands; a premium tissue is at the high end.',
     src: [['Ecosystem Analytics (2013), facial tissue LCA, p. 5 and table A9: 2.41 kg CO2e for 785 tissues → 3.1 g', 'https://www.ecosystem-analytics.com/wp-content/uploads/2013/10/Complete-LCA-Facial-Tissue-Handkerchief.pdf'],
           ['Gemechu et al. (2013), Int. J. Life Cycle Assessment 18, abstract: virgin-pulp tissue emits 568 g CO2e per kg more than recycled, about 30% of its total; totals 1.88 and 1.31 kg CO2e per kg, as quoted by Journal of Korea TAPPI (2025) → 2–2.8 g', 'https://doi.org/10.1007/s11367-013-0597-x'],
-          ['Essity (2023) EPD: 1.7–3.5 kg CO2e per kg → 2.6–5.3 g', ESSITY],
+          ['Essity (2023) EPD for paper towels, as a stand-in for tissue paper: 1.7–3.5 kg CO2e per kg → 2.6–5.3 g', ESSITY],
           ['ERM for Kimberly-Clark (2007), table 4.11: premium facial tissue 37–46 kg CO2e per 5 600 sheets → 6.7–8.2 g', 'https://europeantissue.com/wp-content/uploads/081126-KC-Life-Cycle-Assessment-of-Tissue-products-Final-report-Dec-2007.pdf']] },
 
   // Other

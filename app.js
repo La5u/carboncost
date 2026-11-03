@@ -98,7 +98,8 @@ function source(it, summary) {
   const aRng = span(aLo, aHi, mass);
   const rng = span(lo, hi, mass);
   const perTrip = it.km ? `; average trip ${fmt(it.km)} km = ${mass(grams(it, 'avg')[1])}` : '';
-  const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${it.kwh[0]}–${it.kwh[2]})` : '';
+  // Min–max: paired with fuel, the kWh scenarios need not run low to high (see data.js).
+  const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${Math.min(...it.kwh)}–${Math.max(...it.kwh)})` : '';
   const fuel = it.g && it.kwh ? `${it.g[1]} g from fuel + ` : '';
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
