@@ -66,9 +66,10 @@ window.CATS = {
 window.ITEMS = [
   // Food & drink: production and supply chain, excluding cooking
   { id: 'beef-steak', cat: 'Food & drink', item: 'Beef', icon: 'beef', name: 'Beef steak', amt: 200, unit: 'g', avg: 'average', g: [7500, 20000, 54000], one: true, conf: 'low',
-    note: '200 g raw boneless steak. ' + MEAN_NOTE,
+    note: '200 g raw boneless steak. A quarter of this is forest cleared for grazing; beef from rich countries, like the US variant, is about a third of the world figure. ' + MEAN_NOTE,
     src: [['Poore & Nemecek (2018), data S2: beef herd 5th–95th percentile 37.6–269 kg CO2e/kg → 7.5–54 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: beef herd mean 99.5 kg CO2e/kg → 20 kg', POORE_S2],
+          ['Our World in Data, food emissions by supply-chain stage (from Poore & Nemecek 2018): beef herd land-use change 23.2 of 99.5 kg CO2e/kg', 'https://ourworldindata.org/grapher/food-emissions-supply-chain'],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: raw beef portion 200 g, rib-eye steak 195 g', NO_PORTIONS]] },
   { id: 'burger', cat: 'Food & drink', item: 'Beef', icon: 'hamburger', name: 'Beef burger', amt: 180, unit: 'g', avg: 'average', g: [3800, 10000, 27000], one: true, conf: 'low',
     note: '100 g raw beef patty and an 80 g bun; no cheese or sauce. ' + MEAN_NOTE,
