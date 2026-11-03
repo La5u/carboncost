@@ -37,7 +37,7 @@
   #views { margin-right: .8rem; }
   #views button { font: inherit; background: none; border: 0; padding: 0 0 0 .6rem; cursor: pointer; color: #000; }
   #views .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
-  #person, #model, #disp { display: block; font-size: .9rem; color: #444; margin-top: .2rem; }
+  #person, #model, #disp, #weak { display: block; font-size: .9rem; color: #444; margin-top: .2rem; }
   h2.more { margin-top: 1.6rem; }
   h2 { font-size: .9rem; font-weight: 400; color: #444; margin: .2rem 0 .3rem; }
   #detail details { margin: 0; font-size: .85rem; }
@@ -51,6 +51,7 @@
   details[open] { flex-basis: 100%; margin-left: 1.5rem; }
   summary { cursor: pointer; }
   details ul { margin: .2rem 0 .4rem; padding-left: 1.2rem; }
+  .weak { opacity: .45; }
   footer { font-size: .8rem; color: #666; margin: 1.5rem 0; border-top: 1px solid #000; }
 </style>
 </head>
@@ -79,7 +80,7 @@
   Every figure links to at least one published source. “Average” shows the average; where sources disagree about it,
   it shows the spread of their averages. “Range” shows the least to the most possible footprint, from the best case to the worst.
   The grey line under each item shows its footprint on a log scale.
-  “Confidence” says how well the sources agree.</p>
+  “Confidence” says how well the sources agree. Faded items have low confidence or only one source.</p>
 </footer>
 <script src="icons.js"></script>
 <script src="data.js"></script>

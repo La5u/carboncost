@@ -45,6 +45,9 @@ const deflt = (it) => it.km || it.amt || 1;
 const perOne = (it) => grams(it).map((g) => g / deflt(it));
 // What the default amount is, e.g. 'average'.
 const avg = (it) => (it.km ? 'average trip' : it.avg);
+// Faded: low confidence, or only one study or dataset behind the figure.
+const weak = (it) => it.conf === 'low' || it.one;
+const weakAttr = (it) => (weak(it) ? ` class="weak" title="${it.one ? 'Only one source' : 'Low confidence'}"` : '');
 const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 // Footnote marks: * runs on electricity, † food (counted as bought).
 const star = (it) => (it.kwh ? '*' : '') + (it.cat === 'Food & drink' ? '†' : '');
@@ -109,7 +112,7 @@ function renderNav() {
     .map(([c, ic]) => `<button data-cat="${c}" class="${c === cat ? 'on' : ''}">${icon(ic)}${esc(c)}</button>`).join('');
   $('#subs').innerHTML = Object.values(groups).filter((g) => g[0].cat === cat)
     .sort((a, b) => grams(b[0])[1] - grams(a[0])[1])
-    .map(([d]) => `<a href="#${d.id}" class="${d.item === sel.item ? 'on' : ''}">${icon(d.icon)}${esc(d.item)}</a>`).join('');
+    .map(([d]) => `<a href="#${d.id}" class="${d.item === sel.item ? 'on' : ''}${weak(d) ? ' weak' : ''}">${icon(d.icon)}${esc(d.item)}</a>`).join('');
 }
 $('#cats').onclick = (e) => {
   const b = e.target.closest('button');
@@ -119,11 +122,11 @@ $('#cats').onclick = (e) => {
 function renderHead() {
   const vs = groups[sel.item];
   // Shown even for a single variant, so it is clear which exact item the figure is for.
-  $('#variants').innerHTML = vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}">${esc(v.name)}</a>`).join('');
+  $('#variants').innerHTML = vs.map((v) => `<a href="#${v.id}" class="${v === sel ? 'on' : ''}${weak(v) ? ' weak' : ''}">${esc(v.name)}</a>`).join('');
   const what = sel.km ? 'km by ' + lc(sel.name) : sel.amt ? `${sel.unit} ${lc(sel.name)}` : '× ' + sel.name;
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
     value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span></span><b id="total"></b>
-    <span id="person"></span><span id="disp"></span>${sel.model ? `<span id="model">Based on one model: ${esc(sel.model)}</span>` : ''}</div>`;
+    <span id="person"></span><span id="disp"></span>${weak(sel) ? `<span id="weak">${sel.one ? 'Only one source' : 'Low confidence'}: treat this figure as rough.</span>` : ''}${sel.model ? `<span id="model">Based on one model: ${esc(sel.model)}</span>` : ''}</div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 1 + 'ch'; };
   fit();
@@ -166,7 +169,7 @@ function renderRows() {
     const rows = items.map((it) => [row(it), it]);
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...rows.map(([[m]]) => m.length)) + 2 + 'ch');
-    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${text}</a>
+    el.innerHTML = rows.map(([[m, text], it]) => `<li${weakAttr(it)} style="--bar:${pct(grams(it)[1])}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${text}</a>
       ${source(it, 'source')}</li>`).join('');
     el.previousElementSibling.hidden = !items.length;
   };

@@ -12,7 +12,8 @@
 // Entries with km: give g or kwh per passenger-km, and km is the length of an average
 // one-way trip, the default distance. Entries with amt and unit give figures for amt of
 // unit (e.g. 200 g), the default amount; others count units. avg describes the default
-// amount, e.g. 'average'. conf is our confidence in the figure.
+// amount, e.g. 'average'. conf is our confidence in the figure. one: true means a single study or
+// dataset gives the figure; such items, and those with low confidence, are shown faded.
 
 // Grid carbon intensity, g CO2e per kWh generated, life cycle, 2025 (Ember)
 window.GRIDS = {
@@ -64,12 +65,12 @@ window.CATS = {
 
 window.ITEMS = [
   // Food & drink: production and supply chain, excluding cooking
-  { id: 'beef-steak', cat: 'Food & drink', item: 'Beef', icon: 'beef', name: 'Beef steak', amt: 200, unit: 'g', avg: 'average', g: [7500, 20000, 54000], conf: 'low',
+  { id: 'beef-steak', cat: 'Food & drink', item: 'Beef', icon: 'beef', name: 'Beef steak', amt: 200, unit: 'g', avg: 'average', g: [7500, 20000, 54000], one: true, conf: 'low',
     note: '200 g raw boneless steak. ' + MEAN_NOTE,
     src: [['Poore & Nemecek (2018), data S2: beef herd 5th–95th percentile 37.6–269 kg CO2e/kg → 7.5–54 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: beef herd mean 99.5 kg CO2e/kg → 20 kg', POORE_S2],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: raw beef portion 200 g, rib-eye steak 195 g', NO_PORTIONS]] },
-  { id: 'burger', cat: 'Food & drink', item: 'Beef', icon: 'hamburger', name: 'Beef burger', amt: 180, unit: 'g', avg: 'average', g: [3800, 10000, 27000], conf: 'low',
+  { id: 'burger', cat: 'Food & drink', item: 'Beef', icon: 'hamburger', name: 'Beef burger', amt: 180, unit: 'g', avg: 'average', g: [3800, 10000, 27000], one: true, conf: 'low',
     note: '100 g raw beef patty and an 80 g bun; no cheese or sauce. ' + MEAN_NOTE,
     src: [['Poore & Nemecek (2018), data S2: beef herd 37.6–269 and bread 0.71–3.07 kg CO2e/kg (5th–95th percentiles) → 3.8–27 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: beef herd mean 99.5 and bread mean 1.57 kg CO2e/kg → 10 kg', POORE_S2],
@@ -110,7 +111,7 @@ window.ITEMS = [
     src: [['Poore & Nemecek (2018), data S2: lamb & mutton 5th–95th percentile 23.7–60.2 kg CO2e/kg → 2.5–6.3 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: lamb & mutton mean 39.7 kg CO2e/kg → 4.2 kg', POORE_S2],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: lamb chop with fat 145 g, 105 g without bone', NO_PORTIONS]] },
-  { id: 'salmon', cat: 'Food & drink', item: 'Fish', icon: 'fish', name: 'Farmed salmon fillet', amt: 125, unit: 'g', avg: 'average', g: [680, 1700, 4100], conf: 'low',
+  { id: 'salmon', cat: 'Food & drink', item: 'Fish', icon: 'fish', name: 'Farmed salmon fillet', amt: 125, unit: 'g', avg: 'average', g: [680, 1700, 4100], one: true, conf: 'low',
     note: 'Raw fillet. Sources cover farmed fish in general; most of it is the feed.',
     src: [['Poore & Nemecek (2018), data S2: farmed fish 5th–95th percentile 5.41–32.6 kg CO2e/kg → 680 g – 4.1 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: farmed fish mean 13.6 kg CO2e/kg → 1.7 kg', POORE_S2],
@@ -136,7 +137,7 @@ window.ITEMS = [
     note: 'Includes production and packaging.',
     src: [['Poore & Nemecek (2018), data S2: soymilk 5th–95th percentile 0.51–1.74 kg CO2e/litre → 100–350 g', POORE_S2],
           ['Poore & Nemecek (2018), data S2: soy milk mean 0.98 kg CO2e/litre → 200 g', POORE_S2]] },
-  { id: 'almond-milk', cat: 'Food & drink', item: 'Dairy', icon: 'nut', name: 'Almond milk', amt: 200, unit: 'ml', avg: 'average glass', g: [140, 140, 140], conf: 'medium',
+  { id: 'almond-milk', cat: 'Food & drink', item: 'Dairy', icon: 'nut', name: 'Almond milk', amt: 200, unit: 'ml', avg: 'average glass', g: [140, 140, 140], one: true, conf: 'medium',
     note: 'World figure. Low in carbon, but thirsty: a separate problem this page does not count.',
     src: [['Our World in Data, environmental footprints of milks (from Poore & Nemecek 2018): almond milk 0.70 kg CO2e/litre → 140 g', OWID_MILKS],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: medium glass 200 ml', NO_PORTIONS]] },
@@ -208,7 +209,7 @@ window.ITEMS = [
     src: [['Poore & Nemecek (2018), data S2: citrus fruit 5th–95th percentile 0.01–0.66 kg CO2e/kg → 2.5–160 g', POORE_S2],
           ['Poore & Nemecek (2018), data S2: citrus fruit mean 0.39 kg CO2e/kg → 98 g', POORE_S2],
           ['Norwegian Food Safety Authority, University of Oslo and Directorate of Health (2015), Weights, measures and portion sizes for foods: medium orange 250 g', NO_PORTIONS]] },
-  { id: 'tomato', cat: 'Food & drink', item: 'Fruit & veg', icon: 'salad', name: 'Tomato', amt: 100, unit: 'g', avg: 'average', g: [37, 210, 1300], conf: 'low',
+  { id: 'tomato', cat: 'Food & drink', item: 'Fruit & veg', icon: 'salad', name: 'Tomato', amt: 100, unit: 'g', avg: 'average', g: [37, 210, 1300], one: true, conf: 'low',
     note: 'Tomatoes from heated greenhouses are far higher than field-grown ones, which pulls the global mean up.',
     src: [['Poore & Nemecek (2018), data S2: tomatoes 5th–95th percentile 0.37–12.6 kg CO2e/kg → 37 g – 1.3 kg', POORE_S2],
           ['Poore & Nemecek (2018), data S2: tomatoes mean 2.09 kg CO2e/kg → 210 g', POORE_S2],
@@ -269,7 +270,7 @@ window.ITEMS = [
           ['US Department of Energy (2022): 0.35 kWh per mile → 0.22 kWh/km', 'https://www.energy.gov/sites/default/files/2022-10/ev-grid-assist-ev-basics-webinar-2022_09.pdf'],
           ['UK DESNZ (2025) conversion factors: average battery electric car 36.6 g CO2e/km at 177 g/kWh → 0.21 kWh/km', DESNZ_FACTORS],
           ['UK National Travel Survey via Defra (2025), table C-1: average car driver trip in England 8.2 miles (2024) → 13 km', NTS]] },
-  { id: 'cruise', cat: 'Transport', item: 'Cruise', icon: 'ship', name: 'Cruise', amt: 1000, unit: 'km', g: [250000, 390000, 2200000], conf: 'low',
+  { id: 'cruise', cat: 'Transport', item: 'Cruise', icon: 'ship', name: 'Cruise', amt: 1000, unit: 'km', g: [250000, 390000, 2200000], one: true, conf: 'low',
     note: 'Per passenger. CO2 only, from cruises to and from New Zealand in 2007, so a rough guide to cruises elsewhere today.',
     src: [['Howitt et al. (2010), Energy Policy 38(5): 250–2 200 g CO2 per passenger-km, weighted mean 390 g', 'https://ideas.repec.org/a/eee/enepol/v38y2010i5p2552-2560.html']] },
   { id: 'bus', cat: 'Transport', item: 'Bus', icon: 'bus', name: 'Local bus', km: 8, g: [70, 100, 130], conf: 'medium',
@@ -303,7 +304,7 @@ window.ITEMS = [
     note: 'Viewing device, network and data centres. Phone at the low end; the high end is a rough allowance for a big TV.',
     src: [['IEA (2020): 0.077 kWh per hour of typical Netflix viewing; 0.037 kWh on a phone over Wi-Fi', 'https://www.iea.org/commentaries/the-carbon-footprint-of-streaming-video-fact-checking-the-headlines'],
           ['Carbon Trust (2021): 55 g CO2e per hour, European average', 'https://www.carbontrust.com/news-and-insights/news/updated-calculation-released-on-the-carbon-impact-of-online-video-streaming']] },
-  { id: 'phone-charge', cat: 'Tech', item: 'Phone charge', icon: 'battery-charging', name: 'Full phone charge (0 → 100%)', kwh: [0.0245, 0.025, 0.031], conf: 'low',
+  { id: 'phone-charge', cat: 'Tech', item: 'Phone charge', icon: 'battery-charging', name: 'Full phone charge (0 → 100%)', kwh: [0.0245, 0.025, 0.031], one: true, conf: 'low',
     note: '5 000 mAh battery at 4 V = 20 Wh, measured at the wall with 65–82% charging efficiency.',
     src: [['DXOMARK (2021): 5 000 mAh, 4 V battery holds 20 Wh; 25 Wh from the wall at 80% efficiency', 'https://www.dxomark.com/how-dxomark-tests-the-smartphone-battery-experience/']] },
   { id: 'ai-prompt', cat: 'Tech', item: 'AI', icon: 'message-square', name: 'AI text prompt (GPT-4o, Gemini)', kwh: [0.00018, 0.0003, 0.00067], disputed: { kwh: [0.00024, 0.00034] }, conf: 'medium',
@@ -324,7 +325,7 @@ window.ITEMS = [
     note: 'All Bitcoin mining’s emissions divided by the number of transactions. Mining runs whether or not you send one, so one fewer transaction would not save this much.',
     src: [['German Environment Agency (2026), TEXTE 41/2026, by Swiss Economics and Lucerne University of Applied Sciences, table 1: 486 kg CO2e per transaction', 'https://www.umweltbundesamt.de/system/files/medien/11850/publikationen/2026-03/41_2026_TEXTE.pdf'],
           ['Digiconomist Bitcoin Energy Consumption Index (read November 2026): 425 kg CO2', 'https://digiconomist.net/bitcoin-energy-consumption']] },
-  { id: 'web-search', cat: 'Tech', item: 'Web search', icon: 'search', name: 'Web search', kwh: [0.0003, 0.0003, 0.0003], conf: 'low',
+  { id: 'web-search', cat: 'Tech', item: 'Web search', icon: 'search', name: 'Web search', kwh: [0.0003, 0.0003, 0.0003], one: true, conf: 'low',
     note: 'Google’s 2009 figure; no newer public estimate exists.',
     src: [['Google (2009): 0.0003 kWh per search', 'https://publicpolicy.googleblog.com/2009/01/powering-google-search.html']] },
   { id: 'email', cat: 'Tech', item: 'Email', icon: 'mail', name: 'Short email', g: [0.2, 0.3, 4], conf: 'low',
@@ -386,14 +387,14 @@ window.ITEMS = [
     src: [['Sohn et al. (2022), table 3: production 5.62 kg, 0.07 kg per wash, 0.13 kg per dry', SOHN],
           ['Int. J. Life Cycle Assessment (2026): production 5.5–7.1 kg CO2e', 'https://link.springer.com/article/10.1007/s11367-026-02630-3'],
           ['Scherer (2024), Montanuniversität Leoben thesis, table 9: 8.18 kg conventional, 5.35 kg automated European', 'https://pureadmin.unileoben.ac.at/ws/portalfiles/portal/29605673/AC17355817.pdf']] },
-  { id: 'fleece', cat: 'Clothes & bags', item: 'Fleece jacket', icon: 'shirt', name: 'Polyester fleece jacket', g: [11300, 11300, 11300], model: 'Fristads fleece jacket 4921 GRF', conf: 'medium',
+  { id: 'fleece', cat: 'Clothes & bags', item: 'Fleece jacket', icon: 'shirt', name: 'Polyester fleece jacket', g: [11300, 11300, 11300], model: 'Fristads fleece jacket 4921 GRF', one: true, conf: 'medium',
     note: 'One 500 g workwear fleece, from making it up to the factory gate; excludes washing.',
     src: [['Fristads (2019) EPD, fleece jacket 4921 GRF: 11.32 kg CO2e', 'https://static.unpr.io/media/1671/FILE-5fb646d9b810f.pdf']] },
   { id: 'leather-bag', cat: 'Clothes & bags', item: 'Leather bag', icon: 'handbag', name: 'Leather handbag', g: [9400, 9400, 92000], conf: 'low',
     note: 'Cow leather. Studies disagree ten-fold, mostly on how much of the cow’s farming emissions they count against the hide.',
     src: [['Shou et al. (2022), Journal of Cleaner Production, table 2: bovine leather handbag 9.41 kg CO2e, cradle to grave', 'https://doi.org/10.1016/j.jclepro.2022.133557'],
           ['FootBridge (2024): 484 g leather handbag 92 kg CO2e', 'https://footbridge-impact.com/en/lca-for-sustainable-leather-goods/']] },
-  { id: 'tote-bag', cat: 'Clothes & bags', item: 'Tote bag', icon: 'shopping-basket', name: 'Cotton tote bag', g: [5960, 5960, 5960], conf: 'medium',
+  { id: 'tote-bag', cat: 'Clothes & bags', item: 'Tote bag', icon: 'shopping-basket', name: 'Cotton tote bag', g: [5960, 5960, 5960], one: true, conf: 'medium',
     note: 'Per bag, not per use: it has to be reused many times to beat a plastic bag.',
     src: [['UK Environment Agency (2011), tables 3.1 and 5.9: 271.5 kg CO2e for 45.59 cotton bags → 5.96 kg', UKEA_BAGS]] },
 
@@ -415,7 +416,7 @@ window.ITEMS = [
     src: [['UK Defra (2020) impact assessment, p. 55: 19.2 g CO2e per bag', 'https://www.legislation.gov.uk/ukia/2021/34/pdfs/ukia_20210034_en.pdf'],
           ['AFRY for Nordic Paper (2024): 21 g plastic bag 91.5 g CO2e → about 44 g per 10 g bag', 'https://www.nordic-paper.com/sites/default/files/2025-09/LCA-REPORT-Nordic_paper_e-commerce-bag_Without_Annex.pdf'],
           ['UK Environment Agency (2011), tables 3.1 and 6.1: HDPE bag 2.082 kg per 82 bags → 25 g', UKEA_BAGS]] },
-  { id: 'paper-bag', cat: 'Disposables', item: 'Paper bag', icon: 'shopping-bag', name: 'Paper carrier bag', g: [85, 85, 85], conf: 'medium',
+  { id: 'paper-bag', cat: 'Disposables', item: 'Paper bag', icon: 'shopping-bag', name: 'Paper carrier bag', g: [85, 85, 85], one: true, conf: 'medium',
     note: 'Used once.',
     src: [['UK Environment Agency (2011), tables 3.1 and 5.4: 5.52 kg CO2e for 64.98 paper bags → 85 g', UKEA_BAGS]] },
   { id: 'plastic-straw', cat: 'Disposables', item: 'Straw', icon: 'cup-soda', name: 'Plastic straw', g: [0.4, 1.1, 2.8], conf: 'medium',
@@ -429,10 +430,10 @@ window.ITEMS = [
   { id: 'plastic-fork', cat: 'Disposables', item: 'Plastic fork', icon: 'utensils', name: 'Plastic fork or spoon', g: [12, 32, 51], conf: 'medium',
     note: 'Polystyrene. Low end recycled, central landfilled, high end burned.',
     src: [['Sri Lanka LCA (2022), Sustainability 14(21), section 3.2.1: 11.9 g recycled, 32 g landfilled, 51.4 g burned', 'https://www.mdpi.com/2071-1050/14/21/14170']] },
-  { id: 'coffee-pod', cat: 'Disposables', item: 'Coffee pod', icon: 'coffee', name: 'Coffee pod, without the coffee', g: [27, 27, 27], conf: 'medium',
+  { id: 'coffee-pod', cat: 'Disposables', item: 'Coffee pod', icon: 'coffee', name: 'Coffee pod, without the coffee', g: [27, 27, 27], one: true, conf: 'medium',
     note: 'Making the capsule and landfilling it. Pods use less coffee than a filter, and growing 11 g of coffee emits about 59 g, so a pod can beat wasteful filter brewing.',
     src: [['Viana, Marty, Boucher & Dessureault (2023), The Conversation: 27 g CO2e', 'https://theconversation.com/heres-how-your-cup-of-coffee-contributes-to-climate-change-196648']] },
-  { id: 'vape', cat: 'Disposables', item: 'Disposable vape', icon: 'wind', name: 'Disposable vape', g: [150, 150, 150], conf: 'medium',
+  { id: 'vape', cat: 'Disposables', item: 'Disposable vape', icon: 'wind', name: 'Disposable vape', g: [150, 150, 150], one: true, conf: 'medium',
     note: '30 g device, of which the battery is 84 g CO2e and the packaging 12 g.',
     src: [['Scottish Government, single-use vapes environmental report, section 5.1: just over 150 g CO2e', 'https://gov.scot/publications/prohibition-sale-supply-single-use-vapes-strategic-environmental-assessment-environmental-report/pages/5']] },
   { id: 'nappy', cat: 'Disposables', item: 'Nappy', icon: 'baby', name: 'Disposable nappy', g: [134, 145, 150], conf: 'medium',
