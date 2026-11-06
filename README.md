@@ -23,6 +23,11 @@ Figures to source better:
 - Dog: the range (Martens et al. 2019) and the central figure (Pedrinelli et al. 2022) come from different studies; cat has no sourced average.
 - Making a car: one ICCT (2021) table; add a second LCA. Break-even years use a 2019 England mileage.
 - Private jet: the low and high ends are fuel-burn extremes from one study.
+- Hand dryer: one maker's LCA (Excel XLERATOR); add a standard warm-air dryer once a whole-life figure is found (Gregory et al. 2013 give only its power and drying time).
+- Bidet: one heated seat (TOTO EPD); no LCA of a simple non-electric attachment, and no measured figure for the toilet paper bidet users still use.
+- Toilet paper: one brand's two EPDs; find a recycled-paper figure and sheets used per visit.
+- Pad, tampon and cup: one secondary table (Blair et al. 2022, from Hait and Powers 2019); read Hait and Powers, and add period underwear and cloth pads with washing.
+- Christmas trees: the Carbon Trust figures are only known through the OECD blog; the ellipsos report's original link is dead (a Scribd copy is cited).
 
 - Oat and almond milk: Our World in Data credits Poore & Nemecek (2018), but the paper only gives dairy and soy milk; find where 0.90 and 0.70 kg/litre come from.
 - Coffee pod: The Conversation article is the authors' only publication; no paper behind the 27 g was found.
