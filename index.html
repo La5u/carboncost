@@ -34,6 +34,8 @@
   #qty { font: inherit; color: inherit; background: none; border: 1px solid #000; border-radius: 3px;
     padding: 0 .15em; text-align: center; outline: none; cursor: text; }
   #qty:focus { outline: 2px solid #000; }
+  #qlink { text-decoration: none; margin-right: .6rem; padding-right: .6rem; border-right: 1px solid #000; }
+  #qlink.on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   #views { margin-right: .8rem; }
   #views button { font: inherit; background: none; border: 0; padding: 0 0 0 .6rem; cursor: pointer; color: #000; }
   #views .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
@@ -73,7 +75,7 @@
 <body>
 <header>
   <h1>carboncost.me</h1>
-  <span><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button></span>
+  <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button></span>
   <select id="region" aria-label="Electricity grid"></select></span>
 </header>
 <nav id="cats"></nav>

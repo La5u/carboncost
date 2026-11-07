@@ -130,7 +130,8 @@ addEventListener('click', (e) => {
 });
 
 function renderNav() {
-  $('#cats').innerHTML = `<a href="#questions" class="${asking ? 'on' : ''}">${icon('circle-help')}Questions</a>` + Object.entries(CATS)
+  $('#qlink').classList.toggle('on', asking);
+  $('#cats').innerHTML = Object.entries(CATS)
     .map(([c, ic]) => `<button data-cat="${c}" class="${!asking && c === cat ? 'on' : ''}">${icon(ic)}${esc(c)}</button>`).join('');
   $('#subs').hidden = asking;
   if (asking) return;
