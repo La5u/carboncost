@@ -26,7 +26,7 @@ function guessRegion() {
 let region = localStorage.getItem('region');
 if (!GRIDS[region]) region = guessRegion();
 // Amount of the selected item: units, km for trips, or its own unit (g, ml, min…). Starts at the default amount.
-let sel, cat, qty, often;
+let sel, cat, qty, often, asking;
 const OFTEN = { once: ['once', 1], day: ['a day', 365.25], week: ['a week', 52.18], month: ['a month', 12], year: ['a year', 1] };
 const annual = (n, o) => n * (OFTEN[o]?.[1] || 1);
 const hash = (id, n, o) => `#${id}/${n}${o && o !== 'once' ? '/' + o : ''}`;
@@ -66,7 +66,7 @@ const star = (it) => (it.kwh ? '*' : '') + (it.cat === 'Food & drink' ? '†' : 
 const fmt = (n, o) => n.toLocaleString('en', o).replace(/,/g, '\u202f').replace('-', '−');
 const size = (it) => (it.km ? ` (${fmt(it.km)} km trip)` : it.amt ? ` (${fmt(it.amt)} ${it.unit})` : '');
 // Lower-case the first letter of a name inside a sentence, but not of an abbreviation like 'LED'.
-const lc = (s) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
+const lc = (s) => (/^([A-Z][a-z]|A )/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
 
 // 2 significant figures; values below 0.1 are shown as fractions, e.g. 1/300.
 const sig = (x) => fmt(+x.toPrecision(2), { maximumFractionDigits: 3 });
@@ -104,7 +104,7 @@ function span(a, b, fmt) {
   const [, xn, xu] = x.match(/^(.*?)( [^\d\s]\S*)?$/), [, yn, yu] = y.match(/^(.*?)( [^\d\s]\S*)?$/);
   return xu === yu ? `${xn}–${yn}${xu || ''}` : `${x} – ${y}`;
 }
-function source(it, summary) {
+function sourceBody(it) {
   const [aLo, mid, aHi] = perUnit(it, 'avg');
   const [lo, , hi] = perUnit(it, 'range');
   const aRng = span(aLo, aHi, mass);
@@ -116,19 +116,34 @@ function source(it, summary) {
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
   const per = it.km ? ' per km' : it.amt ? '' : ' each';
-  return `<details><summary>${summary}</summary>${esc(it.name)}${it.amt ? size(it) : ''}: ${aRng ? `no agreed average, sources range ${aRng}${per}, central ${mass(mid)}` : `average ${mass(mid)}${per}`}${elec}${perTrip}; least to most possible ${rng || mass(mid)}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul></details>`;
+  return `${esc(it.name)}${it.amt ? size(it) : ''}: ${aRng ? `no agreed average, sources range ${aRng}${per}, central ${mass(mid)}` : `average ${mass(mid)}${per}`}${elec}${perTrip}; least to most possible ${rng || mass(mid)}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul>`;
 }
+const source = (it, summary) => `<details><summary>${summary}</summary>${sourceBody(it)}</details>`;
+// A row's sources open under it from the arrow on the left; the row itself links to the item.
+const tog = `<button class="tog" aria-expanded="false" aria-label="Sources" title="Sources">${icon('chevron-right')}</button>`;
+addEventListener('click', (e) => {
+  const b = e.target.closest('.tog');
+  if (!b) return;
+  const open = b.getAttribute('aria-expanded') !== 'true';
+  b.setAttribute('aria-expanded', open);
+  b.parentElement.querySelector('.src').hidden = !open;
+});
 
 function renderNav() {
-  $('#cats').innerHTML = Object.entries(CATS)
-    .map(([c, ic]) => `<button data-cat="${c}" class="${c === cat ? 'on' : ''}">${icon(ic)}${esc(c)}</button>`).join('');
+  $('#cats').innerHTML = `<a href="#questions" class="${asking ? 'on' : ''}">${icon('circle-help')}Questions</a>` + Object.entries(CATS)
+    .map(([c, ic]) => `<button data-cat="${c}" class="${!asking && c === cat ? 'on' : ''}">${icon(ic)}${esc(c)}</button>`).join('');
+  $('#subs').hidden = asking;
+  if (asking) return;
   $('#subs').innerHTML = Object.values(groups).filter((g) => g[0].cat === cat)
     .sort((a, b) => grams(b[0])[1] - grams(a[0])[1])
     .map(([d]) => `<a href="#${d.id}" class="${d.item === sel.item ? 'on' : ''}${weak(d) ? ' weak' : ''}">${icon(d.icon)}${esc(d.item)}</a>`).join('');
 }
 $('#cats').onclick = (e) => {
   const b = e.target.closest('button');
-  if (b) { cat = b.dataset.cat; renderNav(); }
+  if (!b) return;
+  // From the questions page, a category opens its first item.
+  if (asking) location.hash = ITEMS.find((it) => it.cat === b.dataset.cat).id;
+  else { cat = b.dataset.cat; renderNav(); }
 };
 
 function renderHead() {
@@ -139,7 +154,7 @@ function renderHead() {
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
     value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span>
     <select id="often" aria-label="How often">${Object.entries(OFTEN).map(([k, [label]]) => `<option value="${k}"${k === often ? ' selected' : ''}>${label}</option>`).join('')}</select></span><b id="total"></b>
-    <span id="person"></span><span id="disp"></span>${weak(sel) ? `<span id="weak">${sel.one ? 'Only one source' : 'Low confidence'}: treat this figure as rough.</span>` : ''}${sel.model ? `<span id="model">Based on one model: ${esc(sel.model)}</span>` : ''}</div>`;
+    <span id="person"></span><span id="disp"></span>${weak(sel) ? `<span id="weak">${sel.one ? 'One source only' : 'Low confidence'}: rough figure.</span>` : ''}${sel.model ? `<span id="model">Model: ${esc(sel.model)}</span>` : ''}</div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 1 + 'ch'; };
   fit();
@@ -170,9 +185,9 @@ function renderRows() {
   const rng = span(lo, hi, mass);
   $('#avg').textContent = avg(sel) && qty === deflt(sel) ? ` (${avg(sel)})` : '';
   $('#total').textContent = (rng || mass(mid)) + ' CO₂e' + (often === 'once' ? '' : ' a year');
-  $('#disp').textContent = view === 'avg' && rng ? 'No agreed average: this is how far apart the sources’ estimates are.' : '';
+  $('#disp').textContent = view === 'avg' && rng ? 'Sources disagree: this is the spread of their averages.' : '';
   $('#person').textContent = sel.id === 'person-year' ? ''
-    : `About what the average person on Earth emits in ${rng && lo > 0 ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
+    : `What the average person emits in ${rng && lo > 0 && time(lo) !== time(hi) ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
   $('#detail').innerHTML = source(sel, `${sel.conf} confidence · sources`);
   // Only well-sourced items are compared against; faded ones are still listed in the item bar.
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item && !weak(g[0])).map((g) => g[0])
@@ -181,25 +196,24 @@ function renderRows() {
   const logs = ITEMS.map((it) => Math.log(grams(it)[1])).concat(Math.log(mid));
   // The scale starts a little below the smallest item, so even that one gets a visible bar.
   const [lMin, lMax] = [Math.min(...logs) - 1, Math.max(...logs)];
-  const pct = (g) => (((Math.log(g) - lMin) / (lMax - lMin)) * 100).toFixed(1) + '%';
+  const pct = (g) => ((Math.log(g) - lMin) / (lMax - lMin)).toFixed(3);
   const mine = [lo, mid, hi];
   // Smaller items: how many of them match yours. Bigger ones: how many of yours match one of them.
   const smaller = others.filter((it) => grams(it)[1] <= mid), bigger = others.filter((it) => grams(it)[1] > mid);
-  // Your item as named in the bigger rows; the amount only when you changed it, to keep rows short.
-  const yours = label(sel, qty, often, qty === deflt(sel));
+  // Your item in the bigger rows: just its icon, named in the tooltip.
+  const yours = `<span class="eq" title="${esc(label(sel, qty, often))}">${icon(sel.icon)} =</span>`;
   const list = (el, items, row) => {
     const rows = items.map((it) => [row(it), it]);
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...rows.map(([[m]]) => m.length)) + 2 + 'ch');
-    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"><a href="#${it.id}" title="${esc(it.name)}">${icon(it.icon)} <b>${m} ×</b> ${text}</a>
-      ${source(it, 'source')}</li>`).join('');
+    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}">${tog}<a href="#${it.id}" title="${esc(it.name)}"><b>${m} ×</b> ${text}</a>
+      <div class="src" hidden>${sourceBody(it)}</div></li>`).join('');
     el.previousElementSibling.hidden = !items.length;
   };
-  const name = (it) => `${esc(it.name)}${size(it)}${star(it)}`;
+  const name = (it) => `${icon(it.icon)} ${esc(it.name)}${size(it)}${star(it)}`;
   list($('#rows'), smaller, (it) => [ratio(mine, grams(it)), name(it)]);
-  list($('#rows2'), bigger, (it) => [ratio(grams(it), mine), `${esc(yours)} = ${name(it)}`]);
+  list($('#rows2'), bigger, (it) => [ratio(grams(it), mine), `${yours} ${name(it)}`]);
   renderSwitches();
-  renderQuestions();
 }
 
 function renderSwitches() {
@@ -227,16 +241,30 @@ function renderSwitches() {
   $('#break-even').hidden = !$('#switches').children.length;
 }
 
+// Each question: its two sides as bars on one linear scale, and how many times the first is the second.
 function renderQuestions() {
   const total = ([id, n, o]) => perOne(byId[id]).map((g) => g * annual(n, o));
   const footprint = ([lo, mid, hi]) => span(lo, hi, mass) || mass(mid);
-  const side = ([id, n, o]) => `${esc(label(byId[id], n, o))}: ${footprint(total([id, n, o]))}`;
-  $('#questions').innerHTML = questions.map(({ q, a, b }) => `<li><span><a href="${hash(...a)}">${esc(q)}</a>
-    ${side(a)}; ${side(b)}. The first is ${ratio(total(a), total(b))} × the second.</span></li>`).join('');
+  $('#qlist').innerHTML = questions.map(({ q, a, b }) => {
+    const [ta, tb] = [total(a), total(b)], top = Math.max(ta[1], tb[1]);
+    const bar = (side, t) => `<div class="qbar">${icon(byId[side[0]].icon)}<span>${esc(label(byId[side[0]], side[1], side[2]))}</span><b>${footprint(t)}</b>
+      <i style="--w:${(100 * t[1] / top).toFixed(1)}%"></i></div>`;
+    // The first side against the second: "about the same" when the ratio could be 1 or is near it.
+    const r = ta[1] / tb[1], fuzzy = ta[0] <= tb[2] && ta[2] >= tb[0];
+    const verdict = (fuzzy && ta[0] !== ta[2]) || (r > 0.8 && r < 1.25) ? 'about the same'
+      : r > 1 ? `${ratio(ta, tb)} × more` : `${ratio(tb, ta)} × less`;
+    return `<li><a href="${hash(...a)}">${esc(q)} <b>${verdict}</b></a>${bar(a, ta)}${bar(b, tb)}</li>`;
+  }).join('');
 }
+
+const rerender = () => (asking ? renderQuestions() : renderRows());
 
 function render() {
   const [id, n, o] = location.hash.slice(1).split('/');
+  asking = id === 'questions';
+  $('#item').hidden = asking;
+  $('#qpage').hidden = !asking;
+  if (asking) { renderNav(); renderQuestions(); return; }
   sel = byId[id] || ITEMS[0];
   qty = Number.isFinite(+n) && +n > 0 ? +n : deflt(sel);
   often = Object.hasOwn(OFTEN, o) ? o : 'once';
@@ -252,7 +280,7 @@ viewBtns.forEach((b) => { b.onclick = () => {
   view = b.dataset.v;
   localStorage.setItem('view', view);
   showView();
-  renderRows();
+  rerender();
 }; });
 showView();
 
@@ -264,13 +292,12 @@ regionSel.onchange = () => {
   region = regionSel.value;
   localStorage.setItem('region', region);
   renderNav();
-  renderRows();
+  rerender();
   renderFoot();
 };
 function renderFoot() {
-  $('#gridnote').innerHTML = `* Runs on electricity, so it depends on how your electricity is made. We use the
-    ${GRIDS[region][0]} average for 2025: ${GRIDS[region][1]} g CO₂e per kWh, including building and fuelling power plants
-    (<a href="${GRID_SOURCE[1]}" rel="noopener">${GRID_SOURCE[0]}</a>). We guessed your region from your timezone; change it at the top.`;
+  $('#gridnote').innerHTML = `* Runs on electricity: ${GRIDS[region][0]} grid, ${GRIDS[region][1]} g CO₂e per kWh in 2025, power plants included
+    (<a href="${GRID_SOURCE[1]}" rel="noopener">${GRID_SOURCE[0]}</a>). Guessed from your timezone; change it at the top.`;
 }
 
 addEventListener('hashchange', () => { render(); scrollTo(0, 0); });

@@ -20,7 +20,7 @@
   h1 { font-size: 1rem; margin: 0; }
   select, input { font: inherit; color: #000; background: #fff; border: 1px solid #000; }
   nav { display: flex; gap: 1rem; overflow-x: auto; white-space: nowrap; padding: .35rem 0; border-top: 1px solid #000; scrollbar-width: none; }
-  nav svg { margin-right: .3em; }
+  nav svg { width: 1.2em; height: 1.2em; vertical-align: -.25em; margin-right: .3em; }
   nav button, nav a { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; color: #000; text-decoration: none; }
   nav .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   #subs { font-size: .9rem; }
@@ -45,12 +45,27 @@
   .rows li { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .3rem 0 .55rem; }
   .rows a { text-decoration: none; }
   .rows b { display: inline-block; min-width: var(--w); text-align: right; font-variant-numeric: tabular-nums; }
-  .rows li::before { content: ''; position: absolute; bottom: .15rem; height: 3px; }
-  .rows li::before { left: 0; width: var(--bar); background: #999; }
-  details { margin-left: auto; font-size: .8rem; color: #666; }
-  details[open] { flex-basis: 100%; margin-left: 1.5rem; }
+  .rows li::before { content: ''; position: absolute; bottom: .2rem; left: 1.4rem; height: 1.5px;
+    width: calc((100% - 1.4rem) * var(--bar)); background: #bbb; }
+  .rows svg, #qlist svg { width: 1.35em; height: 1.35em; vertical-align: -.3em; stroke-width: 1.75; }
+  #rows li, #rows2 li { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0; }
+  .tog { font: inherit; background: none; border: 0; padding: 0; width: 1.4rem; text-align: left; cursor: pointer; color: #999; }
+  .tog svg { width: 1em; height: 1em; vertical-align: -.125em; transition: transform .15s; }
+  .tog[aria-expanded="true"] svg { transform: rotate(90deg); }
+  .tog:hover { color: #000; }
+  .src { grid-column: 2; font-size: .8rem; color: #666; }
+  .src ul, details ul { margin: .2rem 0 .4rem; padding-left: 1.2rem; }
+  .src a, details a { text-decoration: underline; }
+  .eq { color: #888; }
+  details { font-size: .8rem; color: #666; }
+  #switches details { flex-basis: 100%; }
   summary { cursor: pointer; }
-  details ul { margin: .2rem 0 .4rem; padding-left: 1.2rem; }
+  #qlist { list-style: none; padding: 0; margin: .8rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1.4rem 2rem; }
+  #qlist > li > a { display: flex; justify-content: space-between; gap: 1rem; font-weight: 600; text-decoration: none; margin-bottom: .4rem; }
+  #qlist > li > a b { white-space: nowrap; }
+  .qbar { display: grid; grid-template-columns: 1.6rem 1fr auto; align-items: center; column-gap: .4rem; font-size: .85rem; margin-top: .25rem; }
+  .qbar i { grid-column: 2 / 4; height: 5px; background: #bbb; width: var(--w); margin-top: .15rem; }
+  .qbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .weak { opacity: .45; }
   footer { font-size: .8rem; color: #666; margin: 1.5rem 0; border-top: 1px solid #000; }
 </style>
@@ -63,34 +78,30 @@
 </header>
 <nav id="cats"></nav>
 <nav id="subs"></nav>
+<main id="item">
 <section id="head">
   <nav id="variants"></nav>
   <div id="big"></div>
   <div id="detail"></div>
 </section>
-<h2>Smaller: this many have the same footprint as yours</h2>
+<h2>Smaller: this many equal one of yours</h2>
 <ul id="rows" class="rows"></ul>
-<h2 class="more">Bigger: this many of yours make one</h2>
+<h2 class="more">Bigger: this many of yours equal one</h2>
 <ul id="rows2" class="rows"></ul>
 <section id="break-even">
-  <h2 class="more">Break-even</h2>
+  <h2 class="more">Break-even: uses until a switch pays back the emissions of making it</h2>
   <ul id="switches" class="rows"></ul>
 </section>
-<section>
-  <h2 class="more">Common questions</h2>
-  <ul id="questions" class="rows"></ul>
-</section>
+</main>
+<main id="qpage" hidden>
+  <ul id="qlist"></ul>
+</main>
 <footer>
   <p id="gridnote"></p>
-  <p>† Food and drink are counted as bought: everything from the farm to the shop, including food lost or
-    thrown away along the way. Food you throw away at home is included too, since you bought it. Cooking is not.</p>
-  <p>CO₂e (CO₂-equivalent) counts all greenhouse gases, not just CO₂, as the amount of CO₂ that would warm the planet as much.
-  Every figure links to at least one published source. “Average” shows the average; where sources disagree about it,
-  it shows the spread of their averages. “Range” shows the least to the most possible footprint, from the best case to the worst.
-  Change the amount and how often to compare a yearly total. “Once” shows just that amount.
-  Break-even lines show how many uses it takes for a switch to save the emissions of making it.
-  The grey line under each item shows its footprint on a log scale.
-  “Confidence” says how well the sources agree. Faded items have low confidence or only one source, so they are left out of the comparisons.</p>
+  <p>† Food as bought: farm to shop, including food wasted on the way and at home. Cooking not included.</p>
+  <p>CO₂e counts all greenhouse gases as the CO₂ that would warm as much. Every figure is sourced: open the arrow.
+  Average: where sources disagree, the spread of their averages. Range: best to worst case.
+  Bars: footprint on a log scale. Faded: low confidence or one source, left out of comparisons.</p>
 </footer>
 <script src="icons.js"></script>
 <script src="data.js"></script>

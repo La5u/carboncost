@@ -616,7 +616,7 @@ window.QUESTIONS = [
   { q: 'Is a year of eating beef once a week worse than a year of driving?', a: ['beef-steak', 200, 'week'], b: ['car', 11900] },
   { q: 'Is owning a dog worse than driving?', a: ['dog-year', 1], b: ['car', 11900] },
   { q: 'Beef burger or plant-based burger?', a: ['burger', 180], b: ['plant-burger', 180] },
-  { q: 'How much of an average person’s year is one hour of private jet?', a: ['private-jet', 1], b: ['person-year', 1] },
+  { q: 'Is an hour of private jet more than a person’s yearly emissions?', a: ['private-jet', 1], b: ['person-year', 1] },
   { q: 'Is an AI prompt worse than a web search?', a: ['ai-prompt', 1], b: ['web-search', 1] },
   { q: 'Ten AI prompts a day, or an hour of streaming a day?', a: ['ai-prompt', 10, 'day'], b: ['streaming', 1, 'day'] },
   { q: 'Hand dryer or paper towels?', a: ['hand-dryer', 1], b: ['paper-towel', 2] },
