@@ -18,6 +18,7 @@
   svg { width: 1em; height: 1em; vertical-align: -.125em; }
   header { display: flex; justify-content: space-between; align-items: center; padding: .6rem 0; }
   h1 { font-size: 1rem; margin: 0; }
+  .beta { font-size: .7rem; font-weight: 400; border: 1px solid #000; border-radius: 3px; padding: 0 .3em; margin-left: .4rem; vertical-align: .1em; text-transform: uppercase; letter-spacing: .04em; cursor: help; }
   select, input { font: inherit; color: #000; background: #fff; border: 1px solid #000; }
   nav { display: flex; gap: 1rem; overflow-x: auto; white-space: nowrap; padding: .35rem 0; border-top: 1px solid #000; scrollbar-width: none; }
   nav svg { width: 1.2em; height: 1.2em; vertical-align: -.25em; margin-right: .3em; }
@@ -70,11 +71,16 @@
   .qbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .weak { opacity: .45; }
   footer { font-size: .8rem; color: #666; margin: 1.5rem 0; border-top: 1px solid #000; }
+  @media (max-width: 560px) {
+    header { flex-wrap: wrap; row-gap: .4rem; }
+    header > span { display: flex; flex-wrap: wrap; align-items: center; row-gap: .4rem; width: 100%; }
+    #region { max-width: 100%; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>carboncost.me</h1>
+  <h1>carboncost.me<span class="beta" title="Preview: figures and sources are still being checked and may change">preview</span></h1>
   <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button></span>
   <select id="region" aria-label="Electricity grid"></select></span>
 </header>
