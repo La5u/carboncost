@@ -1,8 +1,19 @@
 const $ = (s) => document.querySelector(s);
 const byId = Object.fromEntries(ITEMS.map((it) => [it.id, it]));
-// Item label → its variants; the first variant is the default.
-const groups = {};
-for (const it of ITEMS) (groups[it.item] ||= []).push(it);
+// Calculated items: the average is the sum of amount × shared factor (FACTORS in data.js);
+// a term without a factor is a fixed number of grams.
+const term = ([f, n]) => (f ? n * FACTORS[f].g : n);
+for (const it of ITEMS) if (it.calc) {
+  const g = it.calc.reduce((sum, t) => sum + term(t), 0);
+  it.g = [it.g?.[0] ?? g, g, it.g?.[2] ?? g];
+}
+// Item label → its variants; the first variant is the default. Items for one country
+// (region: 'US') are only listed when that country's grid is chosen.
+let groups;
+const regroup = () => {
+  groups = {};
+  for (const it of ITEMS) if (!it.region || it.region === region) (groups[it.item] ||= []).push(it);
+};
 
 // Guess the grid region from the browser timezone: no network request needed.
 const TZ_REGIONS = [
@@ -25,6 +36,7 @@ function guessRegion() {
 
 let region = localStorage.getItem('region');
 if (!GRIDS[region]) region = guessRegion();
+regroup();
 // Amount of the selected item: units, km for trips, or its own unit (g, ml, min…). Starts at the default amount.
 let sel, cat, qty, often, asking;
 const OFTEN = { once: ['once', 1], day: ['a day', 365.25], week: ['a week', 52.18], month: ['a month', 12], year: ['a year', 1] };
@@ -43,11 +55,11 @@ const questions = valid(QUESTIONS, (q) => [q.a[0], q.b[0]]);
 let view = localStorage.getItem('view') === 'range' ? 'range' : 'avg';
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-// [low, central, high] for a view: the full range, the disputed averages, or just the average.
-const pick = (a, d, v) => (v === 'range' ? a : d ? [d[0], a[1], d[1]] : [a[1], a[1], a[1]]);
+// [low, central, high] for a view: the full range, or just the average.
+const pick = (a, v) => (v === 'range' ? a : [a[1], a[1], a[1]]);
 // As given: per unit, per km for trips, or per amt of unit.
 const perUnit = (it, v = view) => {
-  const [g, k] = [it.g && pick(it.g, it.disputed?.g, v), it.kwh && pick(it.kwh, it.disputed?.kwh, v)];
+  const [g, k] = [it.g && pick(it.g, v), it.kwh && pick(it.kwh, v)];
   return [0, 1, 2].map((i) => (g ? g[i] : 0) + (k ? k[i] * GRIDS[region][1] : 0));
 };
 // For the default amount: one unit, an average trip, or amt of unit.
@@ -57,8 +69,9 @@ const deflt = (it) => it.km || it.amt || 1;
 const perOne = (it) => grams(it).map((g) => g / deflt(it));
 // What the default amount is, e.g. 'average'.
 const avg = (it) => (it.km ? 'average trip' : it.avg);
-// Faded: low confidence, or only one study or dataset behind the figure.
-const weak = (it) => it.conf === 'low' || it.one;
+// unc: how far off the average may be, in %. Faded: uncertain by 2× or more.
+const weak = (it) => it.unc >= 100;
+const unc = (it) => (it.unc >= 100 ? `within ${sig(1 + it.unc / 100)}×` : `±${it.unc}%`);
 const esc = (s) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 // Footnote marks: * runs on electricity, † food (counted as bought).
 const star = (it) => (it.kwh ? '*' : '') + (it.cat === 'Food & drink' ? '†' : '');
@@ -104,19 +117,26 @@ function span(a, b, fmt) {
   const [, xn, xu] = x.match(/^(.*?)( [^\d\s]\S*)?$/), [, yn, yu] = y.match(/^(.*?)( [^\d\s]\S*)?$/);
   return xu === yu ? `${xn}–${yn}${xu || ''}` : `${x} – ${y}`;
 }
+const link = ([t, url]) => (url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t));
 function sourceBody(it) {
-  const [aLo, mid, aHi] = perUnit(it, 'avg');
+  const mid = perUnit(it, 'avg')[1];
   const [lo, , hi] = perUnit(it, 'range');
-  const aRng = span(aLo, aHi, mass);
   const rng = span(lo, hi, mass);
   const perTrip = it.km ? `; average trip ${fmt(it.km)} km = ${mass(grams(it, 'avg')[1])}` : '';
   // Min–max: paired with fuel, the kWh scenarios need not run low to high (see data.js).
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${Math.min(...it.kwh)}–${Math.max(...it.kwh)})` : '';
-  const fuel = it.g && it.kwh ? `${it.g[1]} g from fuel + ` : '';
+  const fuel = it.g && it.kwh ? `${mass(it.g[1])} from fuel + ` : '';
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
-  const refs = it.src.map(([t, url]) => `<li>${url ? `<a href="${url}" rel="noopener">${esc(t)}</a>` : esc(t)}</li>`).join('');
+  // Working: each term as amount × factor = grams.
+  const work = it.calc ? `<p>${it.calc.map(([f, n, what]) => f
+    ? `${esc(what)} × ${sig(FACTORS[f].g / 1000)} kg CO₂e per ${FACTORS[f].unit} ${esc(FACTORS[f].name)} = ${mass(term([f, n]))}`
+    : `${esc(what)}: ${mass(n)}`).join('<br>')}</p>` : '';
+  const factors = [...new Set((it.calc || []).map(([f]) => f).filter(Boolean))]
+    .map((f) => `<li>${esc(FACTORS[f].name)}: ${FACTORS[f].src.map(link).join('; ')}</li>`).join('');
+  const checks = (it.checks || []).map(([t, url, g]) => `<li>${link([t, url])}: ${mass(g)}</li>`).join('');
   const per = it.km ? ' per km' : it.amt ? '' : ' each';
-  return `${esc(it.name)}${it.amt ? size(it) : ''}: ${aRng ? `no agreed average, sources range ${aRng}${per}, central ${mass(mid)}` : `average ${mass(mid)}${per}`}${elec}${perTrip}; least to most possible ${rng || mass(mid)}. ${esc(it.note)} Confidence: ${it.conf}.<ul>${refs}</ul>`;
+  return `${esc(it.name)}${it.amt ? size(it) : ''}: average ${mass(mid)}${per} ${unc(it)}${elec}${perTrip}; least to most possible ${rng || mass(mid)}.
+    ${esc(it.note)}${it.local ? ` ${esc(it.local)}` : ''}${work}<ul>${it.src.map((s) => `<li>${link(s)}</li>`).join('')}${factors}</ul>${checks ? `Checks:<ul>${checks}</ul>` : ''}`;
 }
 const source = (it, summary) => `<details><summary>${summary}</summary>${sourceBody(it)}</details>`;
 // A row's sources open under it from the arrow on the left; the row itself links to the item.
@@ -155,7 +175,7 @@ function renderHead() {
   $('#big').innerHTML = `${icon(sel.icon)}<div><span id="what"><input id="qty" type="text" inputmode="decimal"
     value="${qty}" aria-label="Amount" title="Change the amount"> ${esc(what)}${star(sel)}<span id="avg"></span>
     <select id="often" aria-label="How often">${Object.entries(OFTEN).map(([k, [label]]) => `<option value="${k}"${k === often ? ' selected' : ''}>${label}</option>`).join('')}</select></span><b id="total"></b>
-    <span id="person"></span><span id="disp"></span>${weak(sel) ? `<span id="weak">${sel.one ? 'One source only' : 'Low confidence'}: rough figure.</span>` : ''}${sel.model ? `<span id="model">Model: ${esc(sel.model)}</span>` : ''}</div>`;
+    <span id="person"></span>${weak(sel) ? '<span id="weak">Uncertain: estimates differ by 2× or more.</span>' : ''}${sel.model ? `<span id="model">Model: ${esc(sel.model)}</span>` : ''}</div>`;
   const input = $('#qty');
   const fit = () => { input.style.width = Math.max(1, input.value.length) + 1 + 'ch'; };
   fit();
@@ -186,10 +206,9 @@ function renderRows() {
   const rng = span(lo, hi, mass);
   $('#avg').textContent = avg(sel) && qty === deflt(sel) ? ` (${avg(sel)})` : '';
   $('#total').textContent = (rng || mass(mid)) + ' CO₂e' + (often === 'once' ? '' : ' a year');
-  $('#disp').textContent = view === 'avg' && rng ? 'Sources disagree: this is the spread of their averages.' : '';
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `What the average person emits in ${rng && lo > 0 && time(lo) !== time(hi) ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
-  $('#detail').innerHTML = source(sel, `${sel.conf} confidence · sources`);
+  $('#detail').innerHTML = source(sel, `${unc(sel)} · how it's worked out`);
   // Only well-sourced items are compared against; faded ones are still listed in the item bar.
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item && !weak(g[0])).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
@@ -292,6 +311,7 @@ regionSel.value = region;
 regionSel.onchange = () => {
   region = regionSel.value;
   localStorage.setItem('region', region);
+  regroup();
   renderNav();
   rerender();
   renderFoot();
