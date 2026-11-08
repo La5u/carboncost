@@ -215,7 +215,7 @@ function renderRows() {
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `What the average person emits in ${rng && lo > 0 && time(lo) !== time(hi) ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
   $('#detail').innerHTML = source(sel, `${unc(sel)} · how it's worked out`);
-  // Well-sourced items are compared against; faded ones only when 'Include uncertain' is ticked, marked low confidence.
+  // Well-sourced items are compared against; faded ones only when 'Include uncertain' is ticked, and then still faded.
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item && (unsure || !weak(g[0]))).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
   // Bars: each item's footprint on a log scale.
@@ -232,7 +232,7 @@ function renderRows() {
     const rows = items.map((it) => [row(it), it]);
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...rows.map(([[m]]) => m.length)) + 2 + 'ch');
-    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"${weak(it) ? ' class="low"' : ''}>${tog}<a href="#${it.id}" title="${esc(it.name)}"><b>${m} ×</b> ${text}${weak(it) ? ' <small>low confidence</small>' : ''}</a>
+    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"${weak(it) ? ' class="low"' : ''}>${tog}<a href="#${it.id}" title="${esc(it.name)}"><b>${m} ×</b> ${text}</a>
       <div class="src" hidden>${sourceBody(it)}</div></li>`).join('');
     el.previousElementSibling.hidden = !items.length;
   };
