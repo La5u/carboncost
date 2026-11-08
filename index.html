@@ -39,6 +39,8 @@
   #qlink.on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   #views { margin-right: .8rem; }
   #views button { font: inherit; background: none; border: 0; padding: 0 0 0 .6rem; cursor: pointer; color: #000; }
+  #cmp { display: block; width: fit-content; margin: 0 0 .2rem auto; font-size: .85rem; color: #444; cursor: pointer; }
+  #cmp input { vertical-align: -.1em; margin: 0 .3em 0 0; accent-color: #000; }
   small { font-size: .75rem; color: #666; font-weight: 400; }
   li.low > a { opacity: .6; }
   #views .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
@@ -83,7 +85,7 @@
 <body>
 <header>
   <h1>carboncost.me<span class="beta" title="Preview: figures and sources are still being checked and may change">preview</span></h1>
-  <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button><button id="unsure" title="Also compare with uncertain items (estimates differ by 2× or more), marked low confidence">Unsure too</button></span>
+  <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button></span>
   <select id="region" aria-label="Electricity grid"></select></span>
 </header>
 <nav id="cats"></nav>
@@ -94,6 +96,7 @@
   <div id="big"></div>
   <div id="detail"></div>
 </section>
+<label id="cmp" title="Also compare with uncertain items, whose estimates differ by 2× or more; they are marked low confidence"><input type="checkbox" id="unsure"> Include uncertain</label>
 <h2>Smaller: this many equal one of yours</h2>
 <ul id="rows" class="rows"></ul>
 <h2 class="more">Bigger: this many of yours equal one</h2>
@@ -112,7 +115,7 @@
   <p>CO₂e counts all greenhouse gases as the CO₂ that would warm as much. Figures are world averages where one exists.
   Using something (a trip, a wash, a prompt) includes making the vehicle or device, spread over its life; roads, track and the grid are not counted.
   ±%: how far off the average may be. Range: best to worst case. Most products are worked out from their materials and
-  weight, with published studies as checks: open the arrow. Bars: log scale. Faded: uncertain by 2× or more, left out of comparisons unless “Unsure too” is on.</p>
+  weight, with published studies as checks: open the arrow. Bars: log scale. Faded: uncertain by 2× or more, left out of comparisons unless “Include uncertain” is ticked.</p>
 </footer>
 <script src="icons.js"></script>
 <script src="data.js"></script>

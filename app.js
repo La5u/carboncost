@@ -215,7 +215,7 @@ function renderRows() {
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `What the average person emits in ${rng && lo > 0 && time(lo) !== time(hi) ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
   $('#detail').innerHTML = source(sel, `${unc(sel)} · how it's worked out`);
-  // Well-sourced items are compared against; faded ones only when 'Unsure too' is on, marked low confidence.
+  // Well-sourced items are compared against; faded ones only when 'Include uncertain' is ticked, marked low confidence.
   const others = Object.values(groups).filter((g) => g[0].item !== sel.item && (unsure || !weak(g[0]))).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
   // Bars: each item's footprint on a log scale.
@@ -312,9 +312,9 @@ viewBtns.forEach((b) => { b.onclick = () => {
 }; });
 showView();
 const unsureBtn = $('#unsure');
-const showUnsure = () => { unsureBtn.classList.toggle('on', unsure); unsureBtn.setAttribute('aria-pressed', unsure); };
-unsureBtn.onclick = () => {
-  unsure = !unsure;
+const showUnsure = () => { unsureBtn.checked = unsure; };
+unsureBtn.onchange = () => {
+  unsure = unsureBtn.checked;
   localStorage.setItem('unsure', unsure ? '1' : '0');
   showUnsure();
   rerender();
