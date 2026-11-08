@@ -53,20 +53,23 @@ const switches = valid(SWITCHES, (s) => [s.upfront, s.instead, s.per, s.minus]);
 const questions = valid(QUESTIONS, (q) => [q.a[0], q.b[0]]);
 // 'avg': the average, or the spread of the sources' averages where they disagree. 'range': least to most possible.
 let view = localStorage.getItem('view') === 'range' ? 'range' : 'avg';
+// Also compare against uncertain (faded) items, marked low confidence.
+let unsure = localStorage.getItem('unsure') === '1';
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 // [low, central, high] for a view: the full range, or just the average.
 const pick = (a, v) => (v === 'range' ? a : [a[1], a[1], a[1]]);
-// As given: per unit, per km for trips, or per amt of unit.
-const perUnit = (it, v = view) => {
+// As given: per unit, per km for trips, or per amt of unit. use: only running it, without making the car.
+const perUnit = (it, v = view, use) => {
   const [g, k] = [it.g && pick(it.g, v), it.kwh && pick(it.kwh, v)];
-  return [0, 1, 2].map((i) => (g ? g[i] : 0) + (k ? k[i] * GRIDS[region][1] : 0));
+  const made = it.made && !use ? it.made[0] : 0;
+  return [0, 1, 2].map((i) => made + (g ? g[i] : 0) + (k ? k[i] * GRIDS[region][1] : 0));
 };
 // For the default amount: one unit, an average trip, or amt of unit.
-const grams = (it, v) => perUnit(it, v).map((g) => g * (it.km || 1));
+const grams = (it, v, use) => perUnit(it, v, use).map((g) => g * (it.km || 1));
 const deflt = (it) => it.km || it.amt || 1;
 // Per one of whatever qty counts.
-const perOne = (it) => grams(it).map((g) => g / deflt(it));
+const perOne = (it, use) => grams(it, view, use).map((g) => g / deflt(it));
 // What the default amount is, e.g. 'average'.
 const avg = (it) => (it.km ? 'average trip' : it.avg);
 // unc: how far off the average may be, in %. Faded: uncertain by 2× or more.
@@ -125,12 +128,13 @@ function sourceBody(it) {
   const perTrip = it.km ? `; average trip ${fmt(it.km)} km = ${mass(grams(it, 'avg')[1])}` : '';
   // Min–max: paired with fuel, the kWh scenarios need not run low to high (see data.js).
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${Math.min(...it.kwh)}–${Math.max(...it.kwh)})` : '';
-  const fuel = it.g && it.kwh ? `${mass(it.g[1])} from fuel + ` : '';
+  const fuel = (it.made ? `${mass(it.made[0])} making the car + ` : '') + (it.g && it.kwh ? `${mass(it.g[1])} from fuel + ` : '');
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   // Working: each term as amount × factor = grams.
   const work = it.calc ? `<p>${it.calc.map(([f, n, what]) => f
     ? `${esc(what)} × ${fmt(+(FACTORS[f].g / 1000).toPrecision(3))} kg CO₂e per ${FACTORS[f].unit} ${esc(FACTORS[f].name)} = ${mass(term([f, n]))}`
-    : `${esc(what)}: ${mass(n)}`).join('<br>')}</p>` : '';
+    : `${esc(what)}: ${mass(n)}`).join('<br>')}${it.made ? `<br>${esc(it.made[1])}: ${mass(it.made[0])}` : ''}</p>`
+    : it.made ? `<p>${esc(it.made[1])}: ${mass(it.made[0])}</p>` : '';
   const factors = [...new Set((it.calc || []).map(([f]) => f).filter(Boolean))]
     .map((f) => `<li>${esc(FACTORS[f].name)}: ${FACTORS[f].src.map(link).join('; ')}</li>`).join('');
   const checks = (it.checks || []).map(([t, url, g]) => `<li>${link([t, url])}: ${mass(g)}</li>`).join('');
@@ -209,8 +213,8 @@ function renderRows() {
   $('#person').textContent = sel.id === 'person-year' ? ''
     : `What the average person emits in ${rng && lo > 0 && time(lo) !== time(hi) ? `${time(lo)} to ${time(hi)}` : time(mid)}.`;
   $('#detail').innerHTML = source(sel, `${unc(sel)} · how it's worked out`);
-  // Only well-sourced items are compared against; faded ones are still listed in the item bar.
-  const others = Object.values(groups).filter((g) => g[0].item !== sel.item && !weak(g[0])).map((g) => g[0])
+  // Well-sourced items are compared against; faded ones only when 'Unsure too' is on, marked low confidence.
+  const others = Object.values(groups).filter((g) => g[0].item !== sel.item && (unsure || !weak(g[0]))).map((g) => g[0])
     .sort((a, b) => grams(a)[1] - grams(b)[1]);
   // Bars: each item's footprint on a log scale.
   const logs = ITEMS.map((it) => Math.log(grams(it)[1])).concat(Math.log(mid));
@@ -226,7 +230,7 @@ function renderRows() {
     const rows = items.map((it) => [row(it), it]);
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...rows.map(([[m]]) => m.length)) + 2 + 'ch');
-    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}">${tog}<a href="#${it.id}" title="${esc(it.name)}"><b>${m} ×</b> ${text}</a>
+    el.innerHTML = rows.map(([[m, text], it]) => `<li style="--bar:${pct(grams(it)[1])}"${weak(it) ? ' class="low"' : ''}>${tog}<a href="#${it.id}" title="${esc(it.name)}"><b>${m} ×</b> ${text}${weak(it) ? ' <small>low confidence</small>' : ''}</a>
       <div class="src" hidden>${sourceBody(it)}</div></li>`).join('');
     el.previousElementSibling.hidden = !items.length;
   };
@@ -241,7 +245,8 @@ function renderSwitches() {
   $('#switches').innerHTML = switches.filter((s) => [s.upfront, s.instead, s.per, s.minus].includes(sel.id)).map((s) => {
     // Upfront counts a whole item; savings count one km, gram, kWh, etc.
     const up = grams(byId[s.upfront]), minus = s.minus ? grams(byId[s.minus]) : [0, 0, 0];
-    const before = perOne(byId[s.instead]), after = s.per ? perOne(byId[s.per]) : [0, 0, 0];
+    // Each use: running only; making the new car is the upfront part.
+    const before = perOne(byId[s.instead], true), after = s.per ? perOne(byId[s.per], true) : [0, 0, 0];
     const net = [up[0] - minus[2], up[1] - minus[1], up[2] - minus[0]];
     const saving = [before[0] - after[2], before[1] - after[1], before[2] - after[0]];
     const n = [0, 1, 2].map((i) => saving[2 - i] > 0 ? Math.max(0, net[i]) / saving[2 - i] : Infinity);
@@ -273,7 +278,8 @@ function renderQuestions() {
     const r = ta[1] / tb[1], fuzzy = ta[0] <= tb[2] && ta[2] >= tb[0];
     const verdict = (fuzzy && ta[0] !== ta[2]) || (r > 0.8 && r < 1.25) ? 'about the same'
       : r > 1 ? `${ratio(ta, tb)} × more` : `${ratio(tb, ta)} × less`;
-    return `<li><a href="${hash(...a)}">${esc(q)} <b>${verdict}</b></a>${bar(a, ta)}${bar(b, tb)}</li>`;
+    const low = weak(byId[a[0]]) || weak(byId[b[0]]) ? ' <small>low confidence</small>' : '';
+    return `<li><a href="${hash(...a)}">${esc(q)} <b>${verdict}</b>${low}</a>${bar(a, ta)}${bar(b, tb)}</li>`;
   }).join('');
 }
 
@@ -294,7 +300,7 @@ function render() {
   renderRows();
 }
 
-const viewBtns = [...document.querySelectorAll('#views button')];
+const viewBtns = [...document.querySelectorAll('#views button[data-v]')];
 const showView = () => viewBtns.forEach((b) => b.classList.toggle('on', b.dataset.v === view));
 viewBtns.forEach((b) => { b.onclick = () => {
   view = b.dataset.v;
@@ -303,6 +309,15 @@ viewBtns.forEach((b) => { b.onclick = () => {
   rerender();
 }; });
 showView();
+const unsureBtn = $('#unsure');
+const showUnsure = () => { unsureBtn.classList.toggle('on', unsure); unsureBtn.setAttribute('aria-pressed', unsure); };
+unsureBtn.onclick = () => {
+  unsure = !unsure;
+  localStorage.setItem('unsure', unsure ? '1' : '0');
+  showUnsure();
+  rerender();
+};
+showUnsure();
 
 const regionSel = $('#region');
 regionSel.innerHTML = Object.entries(GRIDS)

@@ -39,6 +39,8 @@
   #qlink.on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   #views { margin-right: .8rem; }
   #views button { font: inherit; background: none; border: 0; padding: 0 0 0 .6rem; cursor: pointer; color: #000; }
+  small { font-size: .75rem; color: #666; font-weight: 400; }
+  li.low > a { opacity: .6; }
   #views .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   #person, #model, #weak { display: block; font-size: .9rem; color: #444; margin-top: .2rem; }
   h2.more { margin-top: 1.6rem; }
@@ -81,7 +83,7 @@
 <body>
 <header>
   <h1>carboncost.me<span class="beta" title="Preview: figures and sources are still being checked and may change">preview</span></h1>
-  <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button></span>
+  <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button><button id="unsure" title="Also compare with uncertain items (estimates differ by 2× or more), marked low confidence">Unsure too</button></span>
   <select id="region" aria-label="Electricity grid"></select></span>
 </header>
 <nav id="cats"></nav>
@@ -109,7 +111,7 @@
   <p>† Food as bought: farm to shop, including food wasted on the way and at home. Cooking not included.</p>
   <p>CO₂e counts all greenhouse gases as the CO₂ that would warm as much. Figures are world averages where one exists.
   ±%: how far off the average may be. Range: best to worst case. Most products are worked out from their materials and
-  weight, with published studies as checks: open the arrow. Bars: log scale. Faded: uncertain by 2× or more, left out of comparisons.</p>
+  weight, with published studies as checks: open the arrow. Bars: log scale. Faded: uncertain by 2× or more, left out of comparisons unless “Unsure too” is on.</p>
 </footer>
 <script src="icons.js"></script>
 <script src="data.js"></script>

@@ -17,7 +17,8 @@
 // 100: within 2× or one source; 200: worse). Items at 100 or more are shown faded and left out of comparisons.
 // region: a country's own figure, listed only when that country's grid is chosen.
 // calc: [factor, amount, what] terms; the central figure is the sum of amount × FACTORS[factor].g
-// (g[1] is then null). checks: [title, url, grams] whole-item estimates by others, to compare against.
+// (g[1] is then null). made: [g per km, what] making a car, spread over its life; added to the per-km figure,
+// but not when working out when a new car pays back. checks: [title, url, grams] whole-item estimates by others, to compare against.
 
 // Grid carbon intensity, g CO2e per kWh generated, life cycle, 2025 (Ember)
 window.GRIDS = {
@@ -35,6 +36,9 @@ window.GRIDS = {
 };
 window.GRID_SOURCE = ['Ember, yearly electricity data (2025)', 'https://ember-energy.org/data/yearly-electricity-data/'];
 
+// Making a car, spread over its life: ICCT (2021) footprints ÷ the same study's lifetime distance.
+const ZEVTC = 'https://zevtc.org/wp-content/uploads/2023/05/ZEVTC-decarbonizing-by-2050-Jul2021%E2%80%AF.pdf';
+const LIFE_KM = 'ICCT (2021), global vehicle LCA, appendix: lifetime distance of medium cars 243 000 km (EU), 314 000 (US), 285 000 (China), 165 000 (India) → about 250 000 km';
 const POORE_S2 = 'https://www.science.org/doi/suppl/10.1126/science.aaq0216/suppl_file/aaq0216_datas2.xls';
 const QIAN = 'https://researchonline.jcu.edu.au/76230/1/Food%20waste%20and%20associated%20carbon%20footprint%20Evidence%20from%20Chinese%20universities.pdf';
 const DIET_GREEN = 'https://www.dietforagreenplanet.se/en/wp-content/uploads/sites/4/2021/01/Milk-and-plant-based-alternatives-an-environmental-assessment-EN-web.pdf';
@@ -313,38 +317,48 @@ window.ITEMS = [
     note: '11 200 km round trip. Average passenger across all classes; economy is at the low end, first class at the high end. Includes non-CO2 warming effects.',
     src: [['UK DESNZ (2025), tables 36 and 45: 5 600 km each way at long-haul factors → 1.7 t average passenger, 1.3 t economy, 3.8 t business, 5.2 t first', DESNZ],
           ['IATA (2024): about 360 kg CO2 each way in economy, ×1.7 non-CO2 → 1.2 t', IATA]] },
-  { id: 'car', cat: 'Transport', item: 'Car', icon: 'car', name: 'Petrol car, driver alone', km: 13, g: [189, null, 286], unc: 25,
-    note: 'Fuel burned plus making the fuel, in real-world driving: average of medium cars sold in the EU, US, China and India, the four biggest markets. Small Indian cars to US SUVs make the range. Excludes making the car.',
+  { id: 'car', cat: 'Transport', item: 'Car', icon: 'car', name: 'Petrol car, driver alone', km: 13, made: [29, 'Making the car: 7.2 t over 250 000 km'], g: [189, null, 286], unc: 25,
+    note: 'Fuel burned plus making the fuel, in real-world driving: average of medium cars sold in the EU, US, China and India, the four biggest markets. Small Indian cars to US SUVs make the range. Includes making the car, spread over its life; excludes building roads.',
     calc: [['petrol', 0.074, '0.074 L petrol (7.4 L per 100 km)']],
-    src: [['ICCT (2021), global vehicle LCA, tables A.2, A.4, A.6 and A.8: real-world petrol use of new medium cars 7.1 L/100 km (EU), 7.8 (US), 7.9 (China), 6.8 (India) → average 7.4; Indian hatchback 6.4, US SUV 9.7', ICCT_LCA],
+    src: [['ICCT for the ZEV Transition Council (2021), table A3: making a medium petrol car 7.2 t CO2e, sales-weighted average of China, Europe, India and the US', ZEVTC],
+          [LIFE_KM, ICCT_LCA],
+          ['ICCT (2021), global vehicle LCA, tables A.2, A.4, A.6 and A.8: real-world petrol use of new medium cars 7.1 L/100 km (EU), 7.8 (US), 7.9 (China), 6.8 (India) → average 7.4; Indian hatchback 6.4, US SUV 9.7', ICCT_LCA],
           ['UK National Travel Survey via Defra (2025), table C-1: average car driver trip in England 8.2 miles (2024) → 13 km', NTS]] },
-  { id: 'diesel', cat: 'Transport', item: 'Car', icon: 'fuel', name: 'Diesel car, driver alone', km: 13, g: [180, null, 263], unc: 25,
-    note: 'Fuel burned plus making the fuel, in real-world driving: average of medium diesel cars in the EU and India (few are sold in the US or China). Small EU cars to Indian SUVs make the range. Excludes making the car.',
+  { id: 'diesel', cat: 'Transport', item: 'Car', icon: 'fuel', name: 'Diesel car, driver alone', km: 13, made: [28, 'Making the car: 6.9 t over 250 000 km'], g: [180, null, 263], unc: 25,
+    note: 'Fuel burned plus making the fuel, in real-world driving: average of medium diesel cars in the EU and India (few are sold in the US or China). Small EU cars to Indian SUVs make the range. Includes making the car, spread over its life; excludes building roads.',
     calc: [['diesel', 0.0595, '0.0595 L diesel (5.95 L per 100 km)']],
-    src: [['ICCT (2021), global vehicle LCA, tables A.2 and A.8: real-world diesel use of new medium cars 5.9 L/100 km (EU), 6.0 (India) → 5.95; EU small car 5.4, Indian SUV 7.9', ICCT_LCA],
+    src: [['ICCT for the ZEV Transition Council (2021), table A3: making a medium diesel car 6.9 t CO2e, sales-weighted average', ZEVTC],
+          [LIFE_KM, ICCT_LCA],
+          ['ICCT (2021), global vehicle LCA, tables A.2 and A.8: real-world diesel use of new medium cars 5.9 L/100 km (EU), 6.0 (India) → 5.95; EU small car 5.4, Indian SUV 7.9', ICCT_LCA],
           ['UK National Travel Survey via Defra (2025), table C-1: average car driver trip in England 8.2 miles (2024) → 13 km', NTS]] },
-  { id: 'hybrid', cat: 'Transport', item: 'Car', icon: 'car-front', name: 'Hybrid car, driver alone', km: 13, g: [159, null, 186], unc: 25,
-    note: 'A self-charging hybrid, which runs on petrol. In the EU, hybrids use 24% less fuel than petrol cars of the same size; applied to the world petrol car. Medium cars to SUVs make the range. Excludes making the car.',
+  { id: 'hybrid', cat: 'Transport', item: 'Car', icon: 'car-front', name: 'Hybrid car, driver alone', km: 13, made: [29, 'Making the car: 7.2 t over 250 000 km, as for a petrol car'], g: [159, null, 186], unc: 25,
+    note: 'A self-charging hybrid, which runs on petrol. In the EU, hybrids use 24% less fuel than petrol cars of the same size; applied to the world petrol car. Medium cars to SUVs make the range. Includes making the car, spread over its life; excludes building roads.',
     calc: [['petrol', 0.056, '0.056 L petrol (24% less than 7.4 L per 100 km)']],
-    src: [['ICCT (2021), global vehicle LCA, table A.2: real-world EU hybrid 5.4 L/100 km vs petrol 7.1 for lower medium cars (24% less); hybrid SUV 6.3', ICCT_LCA],
+    src: [['ICCT for the ZEV Transition Council (2021), table A3: making a medium petrol car 7.2 t CO2e; hybrids are not listed, so taken as petrol', ZEVTC],
+          [LIFE_KM, ICCT_LCA],
+          ['ICCT (2021), global vehicle LCA, table A.2: real-world EU hybrid 5.4 L/100 km vs petrol 7.1 for lower medium cars (24% less); hybrid SUV 6.3', ICCT_LCA],
           ['UK National Travel Survey via Defra (2025), table C-1: average car driver trip in England 8.2 miles (2024) → 13 km', NTS]] },
-  { id: 'phev', cat: 'Transport', item: 'Car', icon: 'battery-full', name: 'Plug-in hybrid, driver alone', km: 13, g: [74, null, 206], kwh: [0.106, 0.089, 0.057], unc: 50,
-    note: 'Fuel plus electricity in real-world driving, as owners actually charge: average of medium plug-in hybrids in the EU, US and China. A US car charged often to a Chinese SUV make the range. Excludes making the car.',
+  { id: 'phev', cat: 'Transport', item: 'Car', icon: 'battery-full', name: 'Plug-in hybrid, driver alone', km: 13, made: [35, 'Making the car and battery: 8.0 + 0.7 t over 250 000 km'], g: [74, null, 206], kwh: [0.106, 0.089, 0.057], unc: 50,
+    note: 'Fuel plus electricity in real-world driving, as owners actually charge: average of medium plug-in hybrids in the EU, US and China. A US car charged often to a Chinese SUV make the range. Includes making the car and battery, spread over its life; excludes building roads.',
     calc: [['petrol', 0.0413, '0.0413 L petrol (4.13 L per 100 km)']],
-    src: [['ICCT (2021), global vehicle LCA, tables A.2, A.4 and A.6: real-world medium plug-in hybrids 4.1 L + 12.1 kWh per 100 km (EU), 2.5 L + 10.6 kWh (US), 5.8 L + 4.1 kWh (China) → 4.13 L + 8.9 kWh; Chinese SUV 7.0 L + 5.7 kWh', ICCT_LCA],
+    src: [['ICCT for the ZEV Transition Council (2021), table A3: making a medium plug-in hybrid 8.0 t + battery 0.7 t CO2e, sales-weighted average', ZEVTC],
+          [LIFE_KM, ICCT_LCA],
+          ['ICCT (2021), global vehicle LCA, tables A.2, A.4 and A.6: real-world medium plug-in hybrids 4.1 L + 12.1 kWh per 100 km (EU), 2.5 L + 10.6 kWh (US), 5.8 L + 4.1 kWh (China) → 4.13 L + 8.9 kWh; Chinese SUV 7.0 L + 5.7 kWh', ICCT_LCA],
           ['UK National Travel Survey via Defra (2025), table C-1: average car driver trip in England 8.2 miles (2024) → 13 km', NTS]] },
-  { id: 'ev', cat: 'Transport', item: 'Car', icon: 'plug-zap', name: 'Electric car, driver alone', km: 13, kwh: [0.159, 0.194, 0.24], unc: 25,
-    note: 'Electricity at the charger in real-world driving, including charging losses: average of medium cars sold in the EU, US, China and India, the four biggest markets. An Indian SUV to a US SUV make the range. Excludes making the car and battery.',
-    src: [['ICCT (2021), global vehicle LCA, tables A.2, A.4, A.6 and A.8: real-world medium electric cars 20.6 kWh/100 km (EU), 17.3 (US), 20.4 (China), 19.2 (India) → 19.4; Indian SUV 15.9, US SUV 24.0', ICCT_LCA],
+  { id: 'ev', cat: 'Transport', item: 'Car', icon: 'plug-zap', name: 'Electric car, driver alone', km: 13, made: [40, 'Making the car and battery: 6.5 + 3.4 t over 250 000 km'], kwh: [0.159, 0.194, 0.24], unc: 25,
+    note: 'Electricity at the charger in real-world driving, including charging losses: average of medium cars sold in the EU, US, China and India, the four biggest markets. An Indian SUV to a US SUV make the range. Includes making the car and battery, spread over its life; excludes building roads.',
+    src: [['ICCT for the ZEV Transition Council (2021), table A3: making a medium electric car 6.5 t + battery 3.4 t CO2e, sales-weighted average', ZEVTC],
+          [LIFE_KM, ICCT_LCA],
+          ['ICCT (2021), global vehicle LCA, tables A.2, A.4, A.6 and A.8: real-world medium electric cars 20.6 kWh/100 km (EU), 17.3 (US), 20.4 (China), 19.2 (India) → 19.4; Indian SUV 15.9, US SUV 24.0', ICCT_LCA],
           ['ADAC (2024): tested average 19.7 kWh/100 km, range 15.5–24', 'https://presse.adac.de/meldungen/adac-ev/technik/reichweite-von-elektroautos-steigt-weiter.html'],
           ['US Department of Energy (2022): 0.35 kWh per mile → 0.22 kWh/km', 'https://www.energy.gov/sites/default/files/2022-10/ev-grid-assist-ev-basics-webinar-2022_09.pdf'],
           ['UK National Travel Survey via Defra (2025), table C-1: average car driver trip in England 8.2 miles (2024) → 13 km', NTS]] },
-  { id: 'cruise', cat: 'Transport', item: 'Cruise', icon: 'ship', name: 'Cruise', amt: 1000, unit: 'km', g: [250000, 390000, 2200000], unc: 50,
-    note: 'Per passenger. The central figure is CO2 only, from cruises to and from New Zealand in 2007; European cruise ships in 2019, including fuel production, come out 20% lower.',
-    src: [['Howitt et al. (2010), Energy Policy 38(5): 250–2 200 g CO2 per passenger-km, weighted mean 390 g', 'https://ideas.repec.org/a/eee/enepol/v38y2010i5p2552-2560.html'],
+  { id: 'cruise', cat: 'Transport', item: 'Cruise', icon: 'ship', name: 'Cruise', amt: 1000, unit: 'km', g: [250000, 312000, 2200000], unc: 50,
+    note: 'Per passenger, including making the fuel: European cruise ships in 2019. The range is from cruises to and from New Zealand in 2007, CO2 only: efficient large ships to small expedition ships.',
+    src: [['Howitt et al. (2010), Energy Policy 38(5): 250–2 200 g CO2 per passenger-km in 2007, the range', 'https://ideas.repec.org/a/eee/enepol/v38y2010i5p2552-2560.html'],
           ['CE Delft (2021), Methodology for GHG efficiency of transport modes, table 7.6: passenger ships, mainly cruise vessels, 312.2 g CO2e per passenger-km in 2019, well to wheel → 312 kg', 'https://cedelft.eu/wp-content/uploads/sites/2/2021/05/CE_Delft_200258_Methodology_GHG_Efficiency_Transport_Modes.pdf']] },
   { id: 'bus', cat: 'Transport', item: 'Bus', icon: 'bus', name: 'Local bus', km: 8, g: [42, 112, 150], unc: 50,
-    note: 'Average of the two sources per passenger, including making the fuel; a nearly empty or packed bus differs a lot. An electric bus is at the low end.',
+    note: 'Average of the two sources per passenger, including making the fuel; a nearly empty or packed bus differs a lot. An electric bus is at the low end. The ITF figure also counts making the bus and roads; the World Bank one only the fuel.',
     src: [['ITF/OECD (2024), Greener Micromobility, figure 1: EU fossil-fuel bus 90 g CO2 per passenger-km over its life at 15.3 passengers; electric bus 42 g', 'https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/06/greener-micromobility_5161b98f/9aa6e85a-en.pdf'],
           ['World Bank (2019), Clean Buses in Latin American Cities, table 1.2 (from ICCT 2017): diesel Euro VI city bus 1 840–2 290 g CO2e per bus-km well to wheel ÷ 15.3 passengers, as ITF assumes → 120–150 g, 135 g average', 'https://documents1.worldbank.org/curated/en/410331548180859451/pdf/133929-WP-PUBLIC-P164403-Summary-Report-Green-Your-Bus-Ride.pdf'],
           ['UK National Travel Survey via Defra (2025), table C-1: average local bus trip in England 5.1 miles (2024) → 8 km', NTS]] },
@@ -360,9 +374,9 @@ window.ITEMS = [
     src: [['UIC (2022), Global Rail Sustainability Report, p. 20, from IEA: world average passenger rail 19 g CO2e per passenger-km well to wheel; countries range from about 10 to 100', 'https://uic.org/IMG/pdf/2022_global_rail_sustainability_report_v5.pdf'],
           ['IEA (2019), The Future of Rail, figure 1.24: passenger rail is about three-quarters electric by passenger-km', 'https://iea.blob.core.windows.net/assets/fb7dc9e4-d5ff-4a22-ac07-ef3ca73ac680/The_Future_of_Rail.pdf'],
           ['UK National Travel Survey via Defra (2025), table C-1: average surface rail trip in England 33.7 miles (2024) → 54 km', NTS]] },
-  { id: 'bike', cat: 'Transport', item: 'Bicycle', icon: 'bike', name: 'Cycling', km: 5.5, g: [5, 21, 162], unc: 100,
-    note: 'Making and maintaining the bike is 5 g/km, the low end. The average adds the extra food a cyclist eats; the high end assumes all of it is beef.',
-    src: [['European Cyclists’ Federation (2011), Cycle more often 2 cool down the planet, pp. 8–9: production and maintenance 5 g CO2e/km; average extra food 16 g/km → 21 g; beef only 157 g/km → 162 g', 'https://www.ecf.com/files/wp-content/uploads/ECF_CO2_WEB.pdf'],
+  { id: 'bike', cat: 'Transport', item: 'Bicycle', icon: 'bike', name: 'Cycling', km: 5.5, g: [5, 5, 7], unc: 50,
+    note: 'Making and maintaining your own bike, spread over its life, as for cars; excludes building roads and cycle paths. Bikes made in 2024 are the average; 2020 bikes, which lasted less, the high end. Excludes any extra food a cyclist eats, which depends on what they eat.',
+    src: [['ITF/OECD (2024), Greener Micromobility, figure 1: private bicycle, vehicle component 5 g CO2 per passenger-km (2024), 7 g (2020); 15 g with infrastructure', 'https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/06/greener-micromobility_5161b98f/9aa6e85a-en.pdf'],
           ['Stroud District Council, transport accessibility methodology, p. 19, from DfT table NTS0303: average cycle trip in England 3.4 miles → 5.5 km', 'https://www.stroud.gov.uk/media/x5xptxsk/appendix-5-methodology-for-transport-accessibility-assessment_redacted.pdf']] },
   { id: 'private-jet', cat: 'Transport', item: 'Private jet', icon: 'plane', name: 'Private jet, whole plane', amt: 1, unit: 'hour', g: [780000, 4100000, 9370000], unc: 50,
     note: 'The whole plane for one flight hour, however many are on board. Small jets are at the low end, the largest at the high end. Includes non-CO2 warming effects (×1.7, as for other flights); excludes making fuel and aircraft.',
@@ -419,10 +433,9 @@ window.ITEMS = [
     note: 'Google’s only published figure is from 2009; the average here scales it for data centres and servers becoming more efficient since. Rough. A search that shows an AI answer also runs a language model, so it costs more.',
     src: [['Vanderbauwhede (2023, updated 2025), University of Glasgow: 0.3 Wh × 1.1/1.16 (data-centre overhead, Google) ÷ 6.7 (server efficiency gains, extrapolated from Masanet et al. 2020) = 0.042 Wh; may be up to 10× lower', 'https://limited.systems/articles/google-search-vs-chatgpt-emissions/'],
           ['Google (2009): 0.0003 kWh per search, the top of the range', 'https://publicpolicy.googleblog.com/2009/01/powering-google-search.html']] },
-  { id: 'email', cat: 'Tech', item: 'Email', icon: 'mail', name: 'Short email', g: [0.2, 0.3, 4], unc: 200,
-    note: 'Short email without attachments, counting the devices, network and data centres. The old 4 g figure, still widely repeated, is from the 2010 edition of the same book, which the author has since revised down.',
-    src: [['Berners-Lee (2020), How Bad Are Bananas?, new edition: short email 0.2 g phone to phone, 0.3 g laptop to laptop; spam caught by a filter 0.03 g', 'https://books.google.com/books?id=Pym9DwAAQBAJ'],
-          ['Berners-Lee (2010), How Bad Are Bananas?, first edition: typical email 4 g CO2e, as quoted in later books', '']],
+  { id: 'email', cat: 'Tech', item: 'Email', icon: 'mail', name: 'Short email', g: [0.2, 0.3, 0.3], unc: 200,
+    note: 'Short email without attachments, counting the devices, network and data centres. Phone to phone is the low end. The 4 g still widely repeated is from the book’s 2010 edition, since revised down, so it is not used.',
+    src: [['Berners-Lee (2020), How Bad Are Bananas?, new edition: short email 0.2 g phone to phone, 0.3 g laptop to laptop; spam caught by a filter 0.03 g', 'https://books.google.com/books?id=Pym9DwAAQBAJ']],
     checks: [['Mike Berners-Lee, How Bad Are Bananas?, revised edition (UK)', 'https://profilebooks.com/wp-content/uploads/wpallimport/files/PDFs/9781788163811_preview.pdf', 0.3], ['Basile Fighiera, Empreinte carbone d\'un e-mail (France)', 'https://www.sami.eco/blog/empreinte-carbone-email', 0.4]] },
 
   // Home (electricity only)
@@ -711,7 +724,6 @@ window.QUESTIONS = [
   { q: 'Is owning a dog worse than driving?', a: ['dog-year', 1], b: ['car', 11900] },
   { q: 'Beef burger or plant-based burger?', a: ['burger', 180], b: ['plant-burger', 180] },
   { q: 'Is an hour of private jet more than a person’s yearly emissions?', a: ['private-jet', 1], b: ['person-year', 1] },
-  { q: 'Is an AI prompt worse than a web search?', a: ['ai-prompt', 1], b: ['web-search', 1] },
   { q: 'Ten AI prompts a day, or an hour of streaming a day?', a: ['ai-prompt', 10, 'day'], b: ['streaming', 1, 'day'] },
   { q: 'Hand dryer or paper towels?', a: ['hand-dryer', 1], b: ['paper-towel', 2] },
   { q: 'Dishwasher or washing up by hand?', a: ['dishwasher', 1], b: ['hand-dishes', 1] },
