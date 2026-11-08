@@ -53,7 +53,7 @@ const switches = valid(SWITCHES, (s) => [s.upfront, s.instead, s.per, s.minus]);
 const questions = valid(QUESTIONS, (q) => [q.a[0], q.b[0]]);
 // 'avg': the average, or the spread of the sources' averages where they disagree. 'range': least to most possible.
 let view = localStorage.getItem('view') === 'range' ? 'range' : 'avg';
-// Also compare against uncertain (faded) items, marked low confidence.
+// Also compare against uncertain (faded) items, shown faded.
 let unsure = localStorage.getItem('unsure') === '1';
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
