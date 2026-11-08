@@ -82,7 +82,7 @@ const size = (it) => (it.km ? ` (${fmt(it.km)} km trip)` : it.amt ? ` (${fmt(it.
 const lc = (s) => (/^([A-Z][a-z]|A )/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
 
 // 2 significant figures; values below 0.1 are shown as fractions, e.g. 1/300.
-const sig = (x) => fmt(+x.toPrecision(2), { maximumFractionDigits: 3 });
+const sig = (x) => fmt(+x.toPrecision(2), { maximumFractionDigits: 10 });
 // Big counts in words, e.g. 240 thousand, 1.2 million: easier to read than a row of digits.
 // [divisor, word]; words start at 10 000, so 1–9 thousand stays in digits.
 const scale = (n) => [[1e9, ' billion', 1e9], [1e6, ' million', 1e6], [1e3, ' thousand', 1e4]].find(([, , t]) => +n.toPrecision(2) >= t) || [1, ''];
