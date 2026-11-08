@@ -59,11 +59,13 @@ let unsure = localStorage.getItem('unsure') === '1';
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 // [low, central, high] for a view: the full range, or just the average.
 const pick = (a, v) => (v === 'range' ? a : [a[1], a[1], a[1]]);
-// As given: per unit, per km for trips, or per amt of unit. use: only running it, without making the car.
+// Making the vehicle or device, its share per unit: one figure or [low, central, high].
+const madeG = (it) => (Array.isArray(it.made[0]) ? it.made[0] : [it.made[0], it.made[0], it.made[0]]);
+// As given: per unit, per km for trips, or per amt of unit. use: only running it, without making it.
 const perUnit = (it, v = view, use) => {
   const [g, k] = [it.g && pick(it.g, v), it.kwh && pick(it.kwh, v)];
-  const made = it.made && !use ? it.made[0] : 0;
-  return [0, 1, 2].map((i) => made + (g ? g[i] : 0) + (k ? k[i] * GRIDS[region][1] : 0));
+  const m = it.made && !use ? pick(madeG(it), v) : [0, 0, 0];
+  return [0, 1, 2].map((i) => m[i] + (g ? g[i] : 0) + (k ? k[i] * GRIDS[region][1] : 0));
 };
 // For the default amount: one unit, an average trip, or amt of unit.
 const grams = (it, v, use) => perUnit(it, v, use).map((g) => g * (it.km || 1));
@@ -128,13 +130,13 @@ function sourceBody(it) {
   const perTrip = it.km ? `; average trip ${fmt(it.km)} km = ${mass(grams(it, 'avg')[1])}` : '';
   // Min–max: paired with fuel, the kWh scenarios need not run low to high (see data.js).
   const kwhRng = it.kwh && it.kwh[0] !== it.kwh[2] ? ` (${Math.min(...it.kwh)}–${Math.max(...it.kwh)})` : '';
-  const fuel = (it.made ? `${mass(it.made[0])} making the car + ` : '') + (it.g && it.kwh ? `${mass(it.g[1])} from fuel + ` : '');
+  const fuel = (it.made ? `${mass(madeG(it)[1])} making it + ` : '') + (it.g && it.kwh ? `${mass(it.g[1])} from fuel + ` : '');
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
+  const made = it.made ? `<br>${esc(it.made[1])}: ${span(madeG(it)[0], madeG(it)[2], mass) || mass(madeG(it)[1])}` : '';
   // Working: each term as amount × factor = grams.
   const work = it.calc ? `<p>${it.calc.map(([f, n, what]) => f
     ? `${esc(what)} × ${fmt(+(FACTORS[f].g / 1000).toPrecision(3))} kg CO₂e per ${FACTORS[f].unit} ${esc(FACTORS[f].name)} = ${mass(term([f, n]))}`
-    : `${esc(what)}: ${mass(n)}`).join('<br>')}${it.made ? `<br>${esc(it.made[1])}: ${mass(it.made[0])}` : ''}</p>`
-    : it.made ? `<p>${esc(it.made[1])}: ${mass(it.made[0])}</p>` : '';
+    : `${esc(what)}: ${mass(n)}`).join('<br>')}${made}</p>` : it.made ? `<p>${made.slice(4)}</p>` : '';
   const factors = [...new Set((it.calc || []).map(([f]) => f).filter(Boolean))]
     .map((f) => `<li>${esc(FACTORS[f].name)}: ${FACTORS[f].src.map(link).join('; ')}</li>`).join('');
   const checks = (it.checks || []).map(([t, url, g]) => `<li>${link([t, url])}: ${mass(g)}</li>`).join('');
