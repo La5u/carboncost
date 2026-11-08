@@ -129,7 +129,7 @@ function sourceBody(it) {
   const elec = it.kwh ? ` = ${fuel}${it.kwh[1]} kWh${kwhRng} × ${GRIDS[region][1]} g/kWh, ${GRIDS[region][0]} grid` : '';
   // Working: each term as amount × factor = grams.
   const work = it.calc ? `<p>${it.calc.map(([f, n, what]) => f
-    ? `${esc(what)} × ${sig(FACTORS[f].g / 1000)} kg CO₂e per ${FACTORS[f].unit} ${esc(FACTORS[f].name)} = ${mass(term([f, n]))}`
+    ? `${esc(what)} × ${fmt(+(FACTORS[f].g / 1000).toPrecision(3))} kg CO₂e per ${FACTORS[f].unit} ${esc(FACTORS[f].name)} = ${mass(term([f, n]))}`
     : `${esc(what)}: ${mass(n)}`).join('<br>')}</p>` : '';
   const factors = [...new Set((it.calc || []).map(([f]) => f).filter(Boolean))]
     .map((f) => `<li>${esc(FACTORS[f].name)}: ${FACTORS[f].src.map(link).join('; ')}</li>`).join('');
