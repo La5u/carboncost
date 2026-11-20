@@ -31,10 +31,14 @@
   #big { display: flex; align-items: center; gap: 1rem; margin: 0 0 .4rem; }
   #big > svg { width: 4rem; height: 4rem; flex: none; stroke-width: 1.5; }
   #what { display: block; font-size: 1.1rem; }
+  #often { display: block; font-size: .9rem; margin-bottom: .2rem; }
+  #often button { font: inherit; background: none; border: 0; padding: 0; margin-right: .7rem; cursor: pointer; color: #000; }
+  #often button:last-child { margin-right: 0; }
+  #often .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   #total { display: block; font-size: 2.2rem; line-height: 1.15; }
-  #qty { font: inherit; color: inherit; background: none; border: 1px solid #000; border-radius: 3px;
+  #qty, #times { font: inherit; color: inherit; background: none; border: 1px solid #000; border-radius: 3px;
     padding: 0 .15em; text-align: center; outline: none; cursor: text; }
-  #qty:focus { outline: 2px solid #000; }
+  #qty:focus, #times:focus { outline: 2px solid #000; }
   #qlink { text-decoration: none; margin-right: .6rem; padding-right: .6rem; border-right: 1px solid #000; }
   #qlink.on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   #views { margin-right: .8rem; }
@@ -44,34 +48,37 @@
   small { font-size: .75rem; color: #666; font-weight: 400; }
   li.low > a { opacity: .6; }
   #views .on { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
-  #person, #model, #weak { display: block; font-size: .9rem; color: #444; margin-top: .2rem; }
+  #person, #model, #weak, #route-note { font-size: .9rem; color: #444; margin-top: .2rem; }
+  #person, #model, #weak { display: block; }
   h2.more { margin-top: 1.6rem; }
   h2 { font-size: .9rem; font-weight: 400; color: #444; margin: .2rem 0 .3rem; }
   #detail details { margin: 0; font-size: .85rem; }
   .rows { list-style: none; padding: 0; margin: 0; }
-  .rows li { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .3rem 0 .55rem; }
+  .rows > li { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .3rem 0 .55rem; }
   .rows a { text-decoration: none; }
-  .rows b { display: inline-block; min-width: var(--w); text-align: right; font-variant-numeric: tabular-nums; }
-  .rows li::before { content: ''; position: absolute; bottom: .2rem; left: 1.4rem; height: 1.5px;
-    width: calc((100% - 1.4rem) * var(--bar)); background: #bbb; }
+  .rows > li > a > b { display: inline-block; min-width: var(--w); text-align: right; font-variant-numeric: tabular-nums; }
+  .rows > li::before { content: ''; position: absolute; bottom: .2rem; left: calc(1.4rem + (100% - 1.4rem) * var(--start)); height: 1.5px;
+    width: calc((100% - 1.4rem) * (var(--end) - var(--start))); background: #bbb; }
   .rows svg, #qlist svg { width: 1.35em; height: 1.35em; vertical-align: -.3em; stroke-width: 1.75; }
-  #rows li, #rows2 li { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0; }
-  .tog { font: inherit; background: none; border: 0; padding: 0; width: 1.4rem; text-align: left; cursor: pointer; color: #999; }
+  #rows > li, #rows2 > li, #overlap > li { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0; align-items: start; }
+  .rows > li > details[data-source] { grid-area: 2 / 2; min-width: 0; }
+  .rows > li > a { grid-area: 1 / 2; justify-self: start; }
+  .tog { position: absolute; top: .3rem; left: 0; font-size: 1rem; list-style: none; width: 1.4rem; color: #999; }
+  .tog::-webkit-details-marker { display: none; }
   .tog svg { width: 1em; height: 1em; vertical-align: -.125em; transition: transform .15s; }
-  .tog[aria-expanded="true"] svg { transform: rotate(90deg); }
+  details[open] > .tog svg { transform: rotate(90deg); }
   .tog:hover { color: #000; }
-  .src { grid-column: 2; font-size: .8rem; color: #666; }
-  .src ul, details ul { margin: .2rem 0 .4rem; padding-left: 1.2rem; }
-  .src a, details a { text-decoration: underline; }
+  details ul { margin: .2rem 0 .4rem; padding-left: 1.2rem; }
+  .rows details a { text-decoration: underline; }
   .eq { color: #888; }
   details { font-size: .8rem; color: #666; }
   #switches details { flex-basis: 100%; }
   summary { cursor: pointer; }
-  #qlist { list-style: none; padding: 0; margin: .8rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1.4rem 2rem; }
+  #qlist { list-style: none; padding: 0; margin: .8rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 1.4rem 2rem; }
   #qlist > li > a { display: flex; justify-content: space-between; gap: 1rem; font-weight: 600; text-decoration: none; margin-bottom: .4rem; }
-  #qlist > li > a b { white-space: nowrap; }
   .qbar { display: grid; grid-template-columns: 1.6rem 1fr auto; align-items: center; column-gap: .4rem; font-size: .85rem; margin-top: .25rem; }
-  .qbar i { grid-column: 2 / 4; height: 5px; background: #bbb; width: var(--w); margin-top: .15rem; }
+  .qbar i { grid-column: 2 / 4; height: 5px; margin-top: .15rem;
+    background: linear-gradient(to right, transparent var(--start), #bbb var(--start), #bbb var(--end), transparent var(--end)); }
   .qbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .weak { opacity: .45; }
   footer { font-size: .8rem; color: #666; margin: 1.5rem 0; border-top: 1px solid #000; }
@@ -85,7 +92,7 @@
 <body>
 <header>
   <h1>carboncost.me<span class="beta" title="Preview: figures and sources are still being checked and may change">preview</span></h1>
-  <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" title="The average; where sources disagree, the spread of their averages">Average</button><button data-v="range" title="From the least possible to the most possible footprint">Range</button></span>
+  <span><a id="qlink" href="#questions">Questions</a><span id="views" role="group" aria-label="View"><button data-v="avg" aria-pressed="true" title="Average estimate when available">Average</button><button data-v="range" aria-pressed="false" title="Low to high estimate">Range</button></span>
   <select id="region" aria-label="Electricity grid"></select></span>
 </header>
 <nav id="cats"></nav>
@@ -93,14 +100,17 @@
 <main id="item">
 <section id="head">
   <nav id="variants"></nav>
+  <p id="route-note" hidden></p>
   <div id="big"></div>
   <div id="detail"></div>
 </section>
-<label id="cmp" title="Also compare with uncertain items, whose estimates differ by 2× or more; they stay faded"><input type="checkbox" id="unsure"> Include uncertain</label>
+<label id="cmp" title="Also compare with items that have limited or conflicting evidence, or only a range"><input type="checkbox" id="unsure"> Include uncertain</label>
 <h2>Smaller: this many equal one of yours</h2>
 <ul id="rows" class="rows"></ul>
 <h2 class="more">Bigger: this many of yours equal one</h2>
 <ul id="rows2" class="rows"></ul>
+<h2 class="more">Overlapping estimates</h2>
+<ul id="overlap" class="rows"></ul>
 <section id="break-even">
   <h2 class="more">Break-even: uses until a switch pays back the emissions of making it</h2>
   <ul id="switches" class="rows"></ul>
@@ -109,13 +119,17 @@
 <main id="qpage" hidden>
   <ul id="qlist"></ul>
 </main>
+<main id="retired" hidden>
+  <h2></h2>
+  <p></p>
+</main>
 <footer>
   <p id="gridnote"></p>
   <p>† Food as bought: farm to shop, including food wasted on the way and at home. Cooking not included.</p>
   <p>CO₂e counts all greenhouse gases as the CO₂ that would warm as much. Figures are world averages where one exists.
   Using something (a trip, a wash, a prompt) includes making the vehicle or device, spread over its life; roads, track and the grid are not counted.
-  ±%: how far off the average may be. Range: best to worst case. Most products are worked out from their materials and
-  weight, with published studies as checks: open the arrow. Bars: log scale. Faded: uncertain by 2× or more, left out of comparisons unless “Include uncertain” is ticked.</p>
+  Confidence reflects the evidence for the average. Range shows reported differences between products, places or ways of using them.
+  Open an arrow for the figures and sources. Comparison bars use a log scale. Tick “Include uncertain” to compare items with limited or conflicting evidence or only a range.</p>
   <p><a href="https://lasu.dev/legal/">Legal notice &amp; privacy</a></p>
 </footer>
 <script src="icons.js"></script>
