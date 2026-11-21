@@ -47,7 +47,7 @@ Figures to source better:
 - Avocado: find a sourced fruit weight instead of a round 100 g.
 - Cruise: find a recent international estimate that covers shipbuilding and fuel per passenger-km, and a sourced trip length, before restoring the entry.
 
-Range view shows reported variation. Many food ranges use Poore & Nemecek's 5th–95th percentiles. Confidence grades the average using comparable independent international estimates. Single-source estimates have their own label and appear faded. Turn on **Include uncertain** to add them to the item comparison lists. These entries still need better coverage.
+Range view shows reported variation. Many food ranges use Poore & Nemecek's 5th–95th percentiles. Confidence grades the average using comparable independent international estimates. Single-source estimates have their own label and appear faded. Comparisons use the available range for items with weaker evidence. These entries still need better coverage.
 
 - Low and high: fleece, paper bag, coffee capsule, vape, cigarette, web search, Bitcoin (a per-transaction allocation has no physical best and worst case).
 - One end: avocado, phone charge, kettle, email, jeans (21 kg is production only), paper cup (low), tissue (low), receipt, A4 sheet (high), laptop (high). Oat and almond milk have one world estimate each. Yogurt and butter show study estimates without a world average.

@@ -38,10 +38,9 @@ let preferredRegion = knownGrid(localStorage.getItem('region'));
 let region, explicitRegion;
 const withGrid = (fragment) => explicitRegion ? `${fragment}/grid=${explicitRegion}` : fragment;
 function splitGrid(fragment) {
-  const parts = fragment.split('/');
-  const last = parts.at(-1);
-  const grid = last.startsWith('grid=') ? knownGrid(parts.pop().slice(5)) : null;
-  return [parts.join('/'), grid];
+  const parts = fragment.split(/[?&]/, 1)[0].split('/');
+  const grid = parts.find((part) => part.startsWith('grid='));
+  return [parts.filter((part) => !part.includes('=')).join('/'), grid ? knownGrid(grid.slice(5)) : null];
 }
 // Amount of the selected item: units, km for trips, or its own unit (g, ml, min…). Starts at the default amount.
 let sel, cat, qty, times, often, asking;
@@ -70,8 +69,6 @@ const switches = valid(SWITCHES, (s) => [s.upfront, s.instead, s.per, s.minus]);
 const questions = valid(QUESTIONS, (q) => [q.a[0], q.b[0]]);
 // Average uses the central estimate when available. Range uses the low and high estimates.
 let view = localStorage.getItem('view') === 'range' ? 'range' : 'avg';
-// Also compare against uncertain items; they stay faded.
-let unsure = localStorage.getItem('unsure') === '1';
 
 const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 // [low, central, high] for a view: the full range, or just the average.
@@ -106,6 +103,7 @@ const overlaps = (a, b) => a[0] <= b[2] && a[2] >= b[0];
 // What the default amount is, e.g. 'average'.
 const avg = (it) => it.avg ?? (it.km ? 'average trip' : '');
 const weak = (it) => it.unc >= 100 || it.unc === 'single' || it.unc === 'limited' || it.unc === 'range';
+const comparisonView = (it) => weak(it) ? 'range' : view;
 const confidence = {
   10: 'Measured or calculated from physics',
   25: 'Well supported for this item',
@@ -299,11 +297,10 @@ function renderRows() {
   const basis = mid == null ? 'No average available.' : sel.estimate ? `${sel.estimate}.` : '';
   const rangeNote = view === 'range' ? sel.rangeNote : '';
   $('#person').textContent = [basis, equivalent, rangeNote].filter(Boolean).join(' ');
-  // Well-sourced items are compared against; faded ones only when 'Include uncertain' is ticked, and then still faded.
-  const others = Object.values(groups).map(([it]) => it).filter((it) => it.item !== sel.item && (unsure || !weak(it)))
-    .map((it) => [it, grams(it)]).sort((a, b) => position(a[1]) - position(b[1]));
+  const others = Object.values(groups).map(([it]) => it).filter((it) => it.item !== sel.item)
+    .map((it) => [it, grams(it, comparisonView(it))]).sort((a, b) => position(a[1]) - position(b[1]));
   // Bars: each item's footprint on a log scale.
-  const logs = [...ITEMS.flatMap((it) => grams(it)), lo, hi].filter((g) => g > 0).map(Math.log);
+  const logs = [...ITEMS.flatMap((it) => grams(it, comparisonView(it))), lo, hi].filter((g) => g > 0).map(Math.log);
   // The scale starts a little below the smallest item, so even that one gets a visible bar.
   const [lMin, lMax] = [Math.min(...logs) - 1, Math.max(...logs)];
   const pct = (g) => g > 0 ? ((Math.log(g) - lMin) / (lMax - lMin)).toFixed(3) : '0';
@@ -313,7 +310,7 @@ function renderRows() {
   const overlap = others.filter(([, g]) => overlaps(g, mine) && (lo !== hi || g[0] !== g[2]));
   const yours = label(sel, qty, often, false, times);
   const list = (el, items, larger) => {
-    const multipliers = items.map(([, g]) => larger == null ? footprint(g) : `${larger ? ratio(g, mine) : ratio(mine, g)} ×`);
+    const multipliers = items.map(([it, g]) => larger == null && !weak(it) ? footprint(g) : `${larger ? ratio(g, mine) : ratio(mine, g)} ×`);
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...multipliers.map((m) => m.length)) + 2 + 'ch');
     items.forEach(([it, g], i) => {
@@ -457,7 +454,7 @@ function verdict(a, b, fullA, fullB) {
 
 // Each question: its two sides as bars on one linear scale, and how many times the first is the second.
 function renderQuestions() {
-  const total = ([id, n, o], v) => scaled(perOne(byId[id], false, v), annual(n, o));
+  const total = ([id, n, o], v = comparisonView(byId[id])) => scaled(perOne(byId[id], false, v), annual(n, o));
   $('#qlist').innerHTML = questions.map(({ q, a, b, basis }) => {
     const [ta, tb] = [total(a), total(b)];
     const top = Math.max(ta[2], tb[2]);
@@ -540,15 +537,6 @@ viewBtns.forEach((b) => { b.onclick = () => {
   rerender();
 }; });
 showView();
-const unsureBtn = $('#unsure');
-const showUnsure = () => { unsureBtn.checked = unsure; };
-unsureBtn.onchange = () => {
-  unsure = unsureBtn.checked;
-  localStorage.setItem('unsure', unsure ? '1' : '0');
-  showUnsure();
-  rerender();
-};
-showUnsure();
 
 const regionSel = $('#region');
 regionSel.innerHTML = Object.entries(GRIDS)

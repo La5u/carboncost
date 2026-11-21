@@ -23,7 +23,7 @@
 // within 1.5×; 100: up to 2× apart; 200: more than 2× apart.
 // 'single': one usable international estimate or model, with its own confidence label.
 // 'limited': a proxy, incomplete evidence or a narrow sample for the typical value.
-// 'range': no comparable average. Range-only, single-source, limited and numeric grades 100+ are opt-in comparisons.
+// 'range': no comparable average. Comparisons use the available range for range-only, single-source, limited and numeric grades 100+.
 // rangeLabel explains the basis of the bounds. estimate labels a worked example in Average view.
 // region: a country's own figure, listed only when that country's grid is chosen.
 // calc: [factor, amount, what] terms; the central figure is the sum of amount × FACTORS[factor].g
