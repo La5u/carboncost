@@ -55,10 +55,11 @@
   .rows > li { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .3rem 0 .55rem; }
   .rows a { text-decoration: none; }
   .rows > li > a > b { display: inline-block; min-width: var(--w); text-align: right; font-variant-numeric: tabular-nums; }
-  .rows > li::before { content: ''; position: absolute; bottom: .2rem; left: calc(1.4rem + (100% - 1.4rem) * var(--start)); height: 1.5px;
-    width: calc((100% - 1.4rem) * (var(--end) - var(--start))); background: #bbb; }
+  .rows > li { isolation: isolate; }
+  .rows > li::before { content: ''; position: absolute; z-index: -1; top: .1rem; height: 1.9rem; left: calc(1.4rem + (100% - 1.4rem) * var(--l));
+    width: calc((100% - 1.4rem) * (var(--r) - var(--l))); background: linear-gradient(to right, #d9d9d9 var(--d), #f0f0f0 0); }
   .rows svg, #qlist svg { width: 1.35em; height: 1.35em; vertical-align: -.3em; stroke-width: 1.75; }
-  #rows > li, #rows2 > li, #overlap > li { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0; align-items: start; }
+  #rows > li, #rows2 > li { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0; align-items: start; }
   .rows > li > details[data-source] { grid-area: 2 / 2; min-width: 0; }
   .rows > li > a { grid-area: 1 / 2; justify-self: start; }
   .tog { position: absolute; top: .3rem; left: 0; font-size: 1rem; list-style: none; width: 1.4rem; color: #999; }
@@ -106,8 +107,6 @@
 <ul id="rows" class="rows"></ul>
 <h2 class="more">Bigger: this many of yours equal one</h2>
 <ul id="rows2" class="rows"></ul>
-<h2 class="more">Overlapping estimates</h2>
-<ul id="overlap" class="rows"></ul>
 <section id="break-even">
   <h2 class="more">Break-even: uses until a switch pays back the emissions of making it</h2>
   <ul id="switches" class="rows"></ul>

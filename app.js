@@ -98,7 +98,8 @@ const deflt = (it) => it.km || it.amt || 1;
 // Per one of whatever qty counts.
 const perOne = (it, use, v = view) => scaled(perUnit(it, v, use), 1 / (it.amt || 1));
 // Sort range-only items by the middle of their interval. The bars show both ends.
-const position = ([lo, mid, hi]) => mid ?? (lo + hi) / 2;
+// The average, or else the middle of the range on a log scale.
+const position = ([lo, mid, hi]) => mid ?? (lo > 0 ? Math.sqrt(lo * hi) : (lo + hi) / 2);
 const overlaps = (a, b) => a[0] <= b[2] && a[2] >= b[0];
 // What the default amount is, e.g. 'average'.
 const avg = (it) => it.avg ?? (it.km ? 'average trip' : '');
@@ -279,7 +280,7 @@ function label(it, n, o = 'once', bare, t = 1) {
 }
 
 const comparisonRows = new Map();
-const rowLists = [$('#rows'), $('#rows2'), $('#overlap')];
+const rowLists = [$('#rows'), $('#rows2')];
 function renderRows() {
   const n = amount();
   const mine = scaled(perOne(sel), n);
@@ -303,14 +304,14 @@ function renderRows() {
   const logs = [...ITEMS.flatMap((it) => grams(it, comparisonView(it))), lo, hi].filter((g) => g > 0).map(Math.log);
   // The scale starts a little below the smallest item, so even that one gets a visible bar.
   const [lMin, lMax] = [Math.min(...logs) - 1, Math.max(...logs)];
-  const pct = (g) => g > 0 ? ((Math.log(g) - lMin) / (lMax - lMin)).toFixed(3) : '0';
+  const x = (g) => g > 0 ? Math.max(0, (Math.log(g) - lMin) / (lMax - lMin)) : 0;
   // Smaller items: how many of them match yours. Bigger ones: how many of yours match one of them.
-  const smaller = others.filter(([, g]) => g[2] < lo || (lo === hi && g[0] === hi && g[2] === hi));
-  const bigger = others.filter(([, g]) => g[0] > hi);
-  const overlap = others.filter(([, g]) => overlaps(g, mine) && (lo !== hi || g[0] !== g[2]));
+  // Overlapping ranges go by their average, or the middle of the range; the ratio shows the full range.
+  const smaller = others.filter(([, g]) => position(g) <= position(mine));
+  const bigger = others.filter(([, g]) => position(g) > position(mine));
   const yours = label(sel, qty, often, false, times);
   const list = (el, items, larger) => {
-    const multipliers = items.map(([it, g]) => larger == null && !weak(it) ? footprint(g) : `${larger ? ratio(g, mine) : ratio(mine, g)} ×`);
+    const multipliers = items.map(([, g]) => `${larger ? ratio(g, mine) : ratio(mine, g)} ×`);
     // Multipliers sit in one right-aligned column, as wide as the longest.
     el.style.setProperty('--w', Math.max(0, ...multipliers.map((m) => m.length)) + 2 + 'ch');
     items.forEach(([it, g], i) => {
@@ -319,11 +320,18 @@ function renderRows() {
         row = document.createElement('li');
         row.classList.toggle('low', weak(it));
         row.innerHTML = `${source(it, icon('chevron-right'), true)}<a title="${esc(it.name)}"><b></b> <span class="eq">${icon(sel.icon)} =</span>
-          ${icon(it.icon)} ${esc(it.name)}${size(it)}${star(it)}${g[1] == null ? ' <small>(no average)</small>' : ''}</a>`;
+          ${icon(it.icon)} ${esc(it.name)}${size(it)}${star(it)}</a>`;
         comparisonRows.set(it.id, row);
       }
-      row.style.setProperty('--start', g[0] === g[2] ? '0' : pct(g[0]));
-      row.style.setProperty('--end', pct(g[2]));
+      // The bar runs from the low estimate (or zero) to the high one: dark up to the low estimate, light beyond it.
+      // A footprint that can fall below zero extends left of the start, past the edge,
+      // in proportion to its high estimate: a log scale has no room for zero or less.
+      const r = x(g[2]), l = g[0] < 0 && g[2] > 0 ? r * g[0] / g[2] : 0;
+      row.style.setProperty('--l', l.toFixed(3));
+      row.style.setProperty('--r', r.toFixed(3));
+      // Dark: up to the low estimate, or the part below zero. Light: the rest of the range.
+      const d = r <= l ? 0 : g[0] > 0 ? x(g[0]) / r : -l / (r - l);
+      row.style.setProperty('--d', (d * 100).toFixed(1) + '%');
       const link = row.lastElementChild;
       link.setAttribute('href', itemHash(it.id));
       link.firstElementChild.textContent = multipliers[i];
@@ -337,8 +345,7 @@ function renderRows() {
   // Put a row in its new list before trimming stale rows, so its disclosure can stay open.
   list(rowLists[0], smaller, false);
   list(rowLists[1], bigger, true);
-  list(rowLists[2], overlap, null);
-  for (const [i, count] of [smaller.length, bigger.length, overlap.length].entries()) {
+  for (const [i, count] of [smaller.length, bigger.length].entries()) {
     const el = rowLists[i];
     while (el.children.length > count) el.lastElementChild.remove();
   }
@@ -459,7 +466,7 @@ function renderQuestions() {
     const [ta, tb] = [total(a), total(b)];
     const top = Math.max(ta[2], tb[2]);
     const percent = (g) => top > 0 ? (100 * Math.max(0, g) / top).toFixed(1) : 0;
-    const bar = (side, t) => `<div class="qbar">${icon(byId[side[0]].icon)}<span>${esc(label(byId[side[0]], side[1], side[2]))}</span><b>${footprint(t)}${t[1] == null ? ' <small>(no average)</small>' : ''}</b>
+    const bar = (side, t) => `<div class="qbar">${icon(byId[side[0]].icon)}<span>${esc(label(byId[side[0]], side[1], side[2]))}</span><b>${footprint(t)}</b>
       <i style="--start:${t[0] === t[2] ? 0 : percent(t[0])}%; --end:${percent(t[2])}%"></i></div>`;
     const limited = [a, b].some(([id]) => weak(byId[id]) && byId[id].unc !== 'range');
     const low = limited ? ' <small>limited evidence</small>' : '';
